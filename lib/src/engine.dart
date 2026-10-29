@@ -8,8 +8,12 @@ import 'package:path/path.dart' as p;
 
 import 'project.dart';
 import 'rules/mediaquery_of.dart';
+import 'rules/opacity_animation.dart';
 
-final allRules = <Rule>[MediaQueryOf()];
+final allRules = <Rule>[
+  MediaQueryOf(),
+  OpacityAnimation(),
+];
 
 abstract class Rule {
   String get name;
