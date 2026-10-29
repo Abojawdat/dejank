@@ -4,6 +4,7 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 
 import '../engine.dart';
+import '../project.dart';
 
 class MediaQueryOf extends Rule {
   @override
@@ -36,7 +37,7 @@ class MediaQueryOf extends Rule {
   };
 
   @override
-  List<Finding> check(ResolvedUnitResult unit) {
+  List<Finding> check(ResolvedUnitResult unit, Project project) {
     final findings = <Finding>[];
     unit.unit.accept(_Visitor(this, unit, findings));
     return findings;

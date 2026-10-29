@@ -6,6 +6,7 @@ import 'package:analyzer/file_system/overlay_file_system.dart';
 import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
+import 'project.dart';
 import 'rules/mediaquery_of.dart';
 
 final allRules = <Rule>[MediaQueryOf()];
@@ -15,7 +16,7 @@ abstract class Rule {
 
   String get impact;
 
-  List<Finding> check(ResolvedUnitResult unit);
+  List<Finding> check(ResolvedUnitResult unit, Project project);
 }
 
 class Edit {
@@ -51,6 +52,7 @@ class Report {
 Future<Report> analyze(String path, [List<Rule>? rules]) async {
   final report = Report();
   final collection = AnalysisContextCollection(includedPaths: [p.normalize(p.absolute(path))]);
+  final units = <ResolvedUnitResult>[];
   for (final context in collection.contexts) {
     for (final file in context.contextRoot.analyzedFiles()) {
       if (!file.endsWith('.dart')) continue;
@@ -60,9 +62,13 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
         report.unresolved.add(file);
       }
       report.errors[file] = _errorCount(unit);
-      for (final rule in rules ?? allRules) {
-        report.findings.addAll(rule.check(unit));
-      }
+      units.add(unit);
+    }
+  }
+  final project = Project(units);
+  for (final unit in units) {
+    for (final rule in rules ?? allRules) {
+      report.findings.addAll(rule.check(unit, project));
     }
   }
   await collection.dispose();
