@@ -1,0 +1,10 @@
+# Code samples for rule tests. Lines marked `// LINT` must be flagged; every other line must not.
+name: fixtures
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
