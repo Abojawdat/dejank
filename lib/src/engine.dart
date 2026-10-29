@@ -7,12 +7,14 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
 import 'project.dart';
+import 'rules/image_cache_size.dart';
 import 'rules/mediaquery_of.dart';
 import 'rules/opacity_animation.dart';
 
 final allRules = <Rule>[
   MediaQueryOf(),
   OpacityAnimation(),
+  ImageCacheSize(),
 ];
 
 abstract class Rule {
