@@ -6,7 +6,7 @@
 - Owner: Mohammad Othman (GitHub **Abojawdat**). Explain things in simple English.
 - Why this idea was chosen: ranked #2 most viral of 45 ideas, and the best one that can also be paid
   (open core). Every Flutter developer is a possible user. Full brainstorm: `docs/ideas-context.md`.
-- Status (2026-10-29): phase 1 done (engine + `mediaquery-of`). See "Build phases" below.
+- Status (2026-10-29): phases 1–4 done (engine, all 6 v1 rules, demo app). See "Build phases" below.
 - Environment: Flutter 3.44.8 stable, Dart 3.12.2, macOS arm64.
 - Name `flutter_turbo` is free on pub.dev (checked 2026-10-29).
 
@@ -77,6 +77,8 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 - Tests per rule: fixture pairs (`input.dart` → `expected.dart`), plus "must not change" fixtures for false-positive cases.
 - Never rewrite code we don't fully understand. When unsure, downgrade to suggest.
 - Keep dependencies minimal (`package:analyzer`, `package:args`).
+- No comments in code (fixtures keep their `// LINT` markers: the tests read them).
+- Small commits with short titles, pushed after every new thing. No attribution lines.
 
 ## Decisions (made 2026-10-29)
 
@@ -89,9 +91,12 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 ## Build phases
 
 1. ✅ Engine (`lib/src/engine.dart`), CLI `scan`/`fix` (`bin/turbo.dart`), rule `mediaquery-of`, fixture tests.
-2. Rules `opacity-animation`, `image-cache-size`.
-3. Rules `shrinkwrap-in-column`, `intrinsic-in-list`, `serial-awaits-main`.
-4. Demo app `example/slow_app`.
+2. ✅ Rules `opacity-animation`, `image-cache-size` (lists only, cacheWidth from real devicePixelRatio). `fix` now
+   re-analyzes changed files in memory and refuses any fix that adds an analyzer error.
+3. ✅ Rules `shrinkwrap-in-column` (builder lists only, and only with no height limit), `intrinsic-in-list`,
+   `serial-awaits-main`. Engine `lib/src/project.dart` finds tile widgets / helper methods used inside lists
+   (and what they use), skipping `onTap:`-style callbacks, so list rules also see code outside the list.
+4. ✅ Demo app `example/slow_app` (200-product shop; all 6 rules fire, 4 auto-fixes; fixed copy analyzes clean).
 5. `flutter_turbo_measure` + `turbo measure`.
 6. Live rebuild overlay.
 
