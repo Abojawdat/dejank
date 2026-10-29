@@ -10,11 +10,13 @@ import 'project.dart';
 import 'rules/image_cache_size.dart';
 import 'rules/mediaquery_of.dart';
 import 'rules/opacity_animation.dart';
+import 'rules/shrinkwrap_in_column.dart';
 
 final allRules = <Rule>[
   MediaQueryOf(),
   OpacityAnimation(),
   ImageCacheSize(),
+  ShrinkWrapInColumn(),
 ];
 
 abstract class Rule {
