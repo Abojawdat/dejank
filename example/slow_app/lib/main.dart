@@ -19,7 +19,7 @@ class ShopApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Turbo Shop',
+      title: 'Dejank Shop',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.deepOrange),
       home: HomeScreen(products: products),

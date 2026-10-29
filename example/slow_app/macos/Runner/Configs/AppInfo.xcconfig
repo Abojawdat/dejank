@@ -8,7 +8,7 @@
 PRODUCT_NAME = slow_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = dev.flutterturbo.slowApp
+PRODUCT_BUNDLE_IDENTIFIER = dev.dejank.slowApp
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 dev.flutterturbo. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 dev.dejank. All rights reserved.

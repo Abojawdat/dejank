@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (p.name.toLowerCase().contains(_query)) p,
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Turbo Shop')),
+      appBar: AppBar(title: const Text('Dejank Shop')),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         child: Column(
