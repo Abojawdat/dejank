@@ -6,16 +6,16 @@
 
 ## My pick (fill this in when you start)
 
-- **Chosen idea:** #2 Flutter Compiler, the "React Compiler for Flutter" (brand: `flutter_turbo`)
+- **Chosen idea:** #2 Flutter Compiler, the "React Compiler for Flutter" (brand: `dejank`)
 - **Why I chose it:** every Flutter developer is a user, nobody owns the space (DCM went paid, best free perf lint has
   11 likes), "X% fewer rebuilds" numbers are the marketing, and it can be paid later (open core).
 - **Free or paid plan:** open core: free CLI and rules; paid CI gate and team reports later
-- **v1 scope:** `turbo scan` / `turbo fix` / `turbo measure` with 6 rules. See `~/Desktop/future packages /flutter_turbo/CLAUDE.md`
+- **v1 scope:** `dejank scan` / `dejank fix` / `dejank measure` with 6 rules. See `~/Desktop/future packages /flutter_turbo/CLAUDE.md`
 - **Started on:** 2026-10-29
 
 **Second pick:** #19 LeakCanary for Flutter (brand: `leak_hound`), project at `~/Desktop/future packages /leak_hound`. Free; builds
 reputation with senior devs; engine already exists in `leak_tracker`, the missing part is the zero-setup in-app
-experience. May later merge into `flutter_turbo` as `turbo leaks`.
+experience. May later merge into `dejank` as `dejank leaks`.
 
 ---
 
@@ -65,7 +65,7 @@ experience. May later merge into `flutter_turbo` as `turbo leaks`.
 ## Strategy decisions
 
 - **Don't ship many small packages. Ship under a few brands:**
-  - `flutter_turbo` — one performance CLI (`turbo fix`, `turbo json`, `turbo fonts`, `turbo assets`, `turbo web`).
+  - `dejank` — one performance CLI (`dejank fix`, `dejank json`, `dejank fonts`, `dejank assets`, `dejank web`).
   - **"Production-safe Flutter"** — one build_runner suite of annotations (`@ApiContract`, `@Guard`,
     `@Sensitive`, `@Restorable`, `@Stored`, `@Collects`, `@Offline`, `@DeepLink`, `@Env`, `@KillSwitch`).
 - **Recommended path:** Month 1 launch #1 React Scan (free, attention) → months 2–4 build #2 Flutter
@@ -206,7 +206,7 @@ class DeliveryStatus extends SurfaceWidget<DeliveryData> {
 - Website + CLI: MB added, startup cost, transitive deps, native code, **permissions a package adds**. Needs building each package in a sample app on servers.
 
 ### 12. One-command asset optimizer
-- PNG→WebP, resize to largest displayed size, 2x/3x, blurred placeholders. A `flutter_turbo` command.
+- PNG→WebP, resize to largest displayed size, 2x/3x, blurred placeholders. A `dejank` command.
 
 ### 13. Permissions as code
 ```dart

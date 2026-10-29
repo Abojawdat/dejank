@@ -1,7 +1,7 @@
 # slow_app
 
 A small shop app written the way a lot of real Flutter code is written: it works, but it's slow.
-It's the "before" for flutter_turbo's demo. Every v1 rule finds something here:
+It's the "before" for dejank's demo. Every v1 rule finds something here:
 
 | Where | Problem | Rule |
 |---|---|---|
@@ -15,6 +15,6 @@ It's the "before" for flutter_turbo's demo. Every v1 rule finds something here:
 
 ```sh
 flutter pub get
-dart run ../../bin/turbo.dart scan .   # 7 problems: 4 auto-fixable
-dart run ../../bin/turbo.dart fix .    # applies the 4 safe fixes
+dart run ../../bin/dejank.dart scan .   # 7 problems: 4 auto-fixable
+dart run ../../bin/dejank.dart fix .    # applies the 4 safe fixes
 ```

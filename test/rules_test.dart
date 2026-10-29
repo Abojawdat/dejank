@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter_turbo/src/engine.dart';
+import 'package:dejank/src/engine.dart';
 import 'package:test/test.dart';
 
 void main() {
