@@ -66,6 +66,7 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
     }
   }
   await collection.dispose();
+  report.findings.sort((a, b) => a.path == b.path ? a.line - b.line : a.path.compareTo(b.path));
   return report;
 }
 
@@ -108,10 +109,10 @@ String diff(String source, List<Edit> edits) {
   final out = StringBuffer();
   var i = 0;
   while (i < sorted.length) {
-    final start = sorted[i].offset == 0 ? 0 : source.lastIndexOf('\n', sorted[i].offset - 1) + 1;
+    final start = _lineStart(source, sorted[i].offset);
     var end = _lineEnd(source, sorted[i].offset + sorted[i].length);
     final hunk = <Edit>[];
-    while (i < sorted.length && sorted[i].offset <= end) {
+    while (i < sorted.length && _lineStart(source, sorted[i].offset) <= end + 1) {
       final e = sorted[i++];
       hunk.add(Edit(e.offset - start, e.length, e.replacement));
       end = _lineEnd(source, e.offset + e.length);
@@ -127,6 +128,8 @@ String diff(String source, List<Edit> edits) {
   }
   return out.toString();
 }
+
+int _lineStart(String s, int offset) => offset == 0 ? 0 : s.lastIndexOf('\n', offset - 1) + 1;
 
 int _lineEnd(String s, int from) {
   final i = s.indexOf('\n', from);

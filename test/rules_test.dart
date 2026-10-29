@@ -48,5 +48,10 @@ void main() {
       '  - final x = MediaQuery.of(context).size;\n'
       '  + final x = MediaQuery.sizeOf(context);\n',
     );
+    expect(
+      diff('a\nb\nc\n\nd', [const Edit(0, 1, 'A'), const Edit(2, 1, 'B'), const Edit(7, 1, 'D')]),
+      '  @@ line 1\n  - a\n  - b\n  + A\n  + B\n'
+      '  @@ line 5\n  - d\n  + D\n',
+    );
   });
 }
