@@ -10,13 +10,11 @@ final allRules = <Rule>[MediaQueryOf()];
 abstract class Rule {
   String get name;
 
-  /// How much this costs at runtime: `high` or `medium`.
   String get impact;
 
   List<Finding> check(ResolvedUnitResult unit);
 }
 
-/// Replace [length] characters at [offset] with [replacement].
 class Edit {
   final int offset, length;
   final String replacement;
@@ -29,7 +27,6 @@ class Finding {
   final int line, column;
   final String message;
 
-  /// Safe rewrites. Empty means "suggest": the message shows the fix, a human applies it.
   final List<Edit> edits;
 
   Finding(this.rule, ResolvedUnitResult unit, int offset, this.message, [this.edits = const []])
@@ -43,12 +40,9 @@ class Finding {
 class Report {
   final findings = <Finding>[];
 
-  /// Files with imports the analyzer could not find (usually `flutter pub get` was not run).
-  /// Rules skip code they can't resolve, so findings in these files may be missing.
   final unresolved = <String>[];
 }
 
-/// Runs [rules] on every Dart file under [path] (a file or a folder).
 Future<Report> analyze(String path, [List<Rule>? rules]) async {
   final report = Report();
   final collection = AnalysisContextCollection(includedPaths: [p.normalize(p.absolute(path))]);
@@ -69,11 +63,9 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
   return report;
 }
 
-/// True when [e] is the Flutter class [name] (not a user class with the same name).
 bool isFlutterClass(Element? e, String name) =>
     e is InterfaceElement && e.name == name && e.library.uri.toString().startsWith('package:flutter/');
 
-/// Applies [edits] to [source]. An edit that overlaps an earlier one is skipped; the next run picks it up.
 String applyEdits(String source, List<Edit> edits) {
   final sorted = [...edits]..sort((a, b) => a.offset - b.offset);
   final out = StringBuffer();
@@ -88,7 +80,6 @@ String applyEdits(String source, List<Edit> edits) {
   return (out..write(source.substring(pos))).toString();
 }
 
-/// Before/after lines for every changed spot, like a small unified diff.
 String diff(String source, List<Edit> edits) {
   final sorted = [...edits]..sort((a, b) => a.offset - b.offset);
   final out = StringBuffer();
@@ -97,7 +88,6 @@ String diff(String source, List<Edit> edits) {
     final start = sorted[i].offset == 0 ? 0 : source.lastIndexOf('\n', sorted[i].offset - 1) + 1;
     var end = _lineEnd(source, sorted[i].offset + sorted[i].length);
     final hunk = <Edit>[];
-    // Edits that start on a line already in this hunk join it.
     while (i < sorted.length && sorted[i].offset <= end) {
       final e = sorted[i++];
       hunk.add(Edit(e.offset - start, e.length, e.replacement));

@@ -29,15 +29,19 @@ class ScanCommand extends Command<void> {
   Future<void> run() async {
     final report = await _analyze(argResults!.rest);
     for (final f in report.findings) {
-      print('${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.rule.impact}  '
-          '${f.autoFix ? 'auto' : 'suggest'}');
+      print(
+        '${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.rule.impact}  '
+        '${f.autoFix ? 'auto' : 'suggest'}',
+      );
       print('  ${f.message.replaceAll('\n', '\n  ')}');
     }
     final auto = report.findings.where((f) => f.autoFix).length;
     final suggest = report.findings.length - auto;
-    print(report.findings.isEmpty
-        ? 'No problems found.'
-        : '\n${report.findings.length} problems: $auto auto-fixable (run `turbo fix`), $suggest need a human.');
+    print(
+      report.findings.isEmpty
+          ? 'No problems found.'
+          : '\n${report.findings.length} problems: $auto auto-fixable (run `turbo fix`), $suggest need a human.',
+    );
   }
 }
 
@@ -62,7 +66,6 @@ class FixCommand extends Command<void> {
       final file = File(path);
       final before = file.readAsStringSync();
       final after = applyEdits(before, edits);
-      // Safety net: never write a file we just made unparsable.
       if (_hasSyntaxErrors(after) && !_hasSyntaxErrors(before)) {
         stderr.writeln('Skipped ${p.relative(path)}: the fix would break it. This is a turbo bug, please report it.');
         continue;
@@ -73,8 +76,10 @@ class FixCommand extends Command<void> {
       print('${p.relative(path)}\n${diff(before, edits)}');
     }
     final suggest = report.findings.where((f) => !f.autoFix).length;
-    print('Fixed $fixed problems in $files files.'
-        '${suggest > 0 ? ' $suggest need a human, see `turbo scan`.' : ''}');
+    print(
+      'Fixed $fixed problems in $files files.'
+      '${suggest > 0 ? ' $suggest need a human, see `turbo scan`.' : ''}',
+    );
   }
 }
 
@@ -85,8 +90,10 @@ Future<Report> _analyze(List<String> rest) async {
   }
   final report = await analyze(path);
   if (report.unresolved.isNotEmpty) {
-    stderr.writeln('Warning: ${report.unresolved.length} files have imports that could not be found. '
-        'Run `flutter pub get` first, or some problems will be missed.');
+    stderr.writeln(
+      'Warning: ${report.unresolved.length} files have imports that could not be found. '
+      'Run `flutter pub get` first, or some problems will be missed.',
+    );
   }
   return report;
 }

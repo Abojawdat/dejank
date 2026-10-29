@@ -3,9 +3,6 @@ import 'dart:io';
 import 'package:flutter_turbo/src/engine.dart';
 import 'package:test/test.dart';
 
-/// Each rule has `test/fixtures/lib/<rule_name>/`:
-/// - `input.dart`: lines ending in `// LINT` must be flagged, every other line must not (no false positives).
-/// - `expected.dart`: `input.dart` after `turbo fix`. Missing means the rule never rewrites code.
 void main() {
   setUpAll(() async {
     if (!File('test/fixtures/.dart_tool/package_config.json').existsSync()) {
@@ -36,7 +33,6 @@ void main() {
       final fixed = applyEdits(input, [for (final f in report.findings) ...f.edits]);
       expect(fixed, expected.existsSync() ? expected.readAsStringSync() : input);
 
-      // Fixing again changes nothing.
       if (expected.existsSync()) {
         final again = await analyze(expected.path, [rule]);
         expect(again.findings.where((f) => f.autoFix), isEmpty, reason: 'expected.dart still has fixes');
