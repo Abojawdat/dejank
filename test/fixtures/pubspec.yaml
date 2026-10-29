@@ -8,3 +8,5 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  fake_sdks:
+    path: fake_sdks

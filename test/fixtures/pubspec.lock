@@ -17,6 +17,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  fake_sdks:
+    dependency: "direct main"
+    description:
+      path: fake_sdks
+      relative: true
+    source: path
+    version: "0.0.0"
   flutter:
     dependency: "direct main"
     description: flutter

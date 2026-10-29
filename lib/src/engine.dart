@@ -11,6 +11,7 @@ import 'rules/image_cache_size.dart';
 import 'rules/intrinsic_in_list.dart';
 import 'rules/mediaquery_of.dart';
 import 'rules/opacity_animation.dart';
+import 'rules/serial_awaits_main.dart';
 import 'rules/shrinkwrap_in_column.dart';
 
 final allRules = <Rule>[
@@ -19,6 +20,7 @@ final allRules = <Rule>[
   ImageCacheSize(),
   ShrinkWrapInColumn(),
   IntrinsicInList(),
+  SerialAwaitsMain(),
 ];
 
 abstract class Rule {

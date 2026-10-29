@@ -5,10 +5,8 @@ import 'package:test/test.dart';
 
 void main() {
   setUpAll(() async {
-    if (!File('test/fixtures/.dart_tool/package_config.json').existsSync()) {
-      final r = await Process.run('flutter', ['pub', 'get'], workingDirectory: 'test/fixtures');
-      if (r.exitCode != 0) fail('flutter pub get failed in test/fixtures:\n${r.stderr}');
-    }
+    final r = await Process.run('flutter', ['pub', 'get'], workingDirectory: 'test/fixtures');
+    if (r.exitCode != 0) fail('flutter pub get failed in test/fixtures:\n${r.stderr}');
   });
 
   test('fixtures compile against real Flutter', () async {

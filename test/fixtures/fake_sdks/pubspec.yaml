@@ -1,0 +1,6 @@
+# Stand-ins for third-party SDKs (Firebase, shared_preferences, Hive) so rules can be tested on "package" code.
+name: fake_sdks
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
