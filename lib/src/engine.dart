@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'project.dart';
 import 'rules/image_cache_size.dart';
+import 'rules/intrinsic_in_list.dart';
 import 'rules/mediaquery_of.dart';
 import 'rules/opacity_animation.dart';
 import 'rules/shrinkwrap_in_column.dart';
@@ -17,6 +18,7 @@ final allRules = <Rule>[
   OpacityAnimation(),
   ImageCacheSize(),
   ShrinkWrapInColumn(),
+  IntrinsicInList(),
 ];
 
 abstract class Rule {
