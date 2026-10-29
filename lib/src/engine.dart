@@ -1,6 +1,9 @@
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/diagnostic/diagnostic.dart';
+import 'package:analyzer/file_system/overlay_file_system.dart';
+import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
 import 'rules/mediaquery_of.dart';
@@ -41,6 +44,8 @@ class Report {
   final findings = <Finding>[];
 
   final unresolved = <String>[];
+
+  final errors = <String, int>{};
 }
 
 Future<Report> analyze(String path, [List<Rule>? rules]) async {
@@ -54,6 +59,7 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
       if (unit.diagnostics.any((d) => d.diagnosticCode.lowerCaseName == 'uri_does_not_exist')) {
         report.unresolved.add(file);
       }
+      report.errors[file] = _errorCount(unit);
       for (final rule in rules ?? allRules) {
         report.findings.addAll(rule.check(unit));
       }
@@ -62,6 +68,23 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
   await collection.dispose();
   return report;
 }
+
+Future<Set<String>> wouldBreak(Report report, Map<String, String> changes) async {
+  final overlay = OverlayResourceProvider(PhysicalResourceProvider.INSTANCE);
+  for (final MapEntry(key: path, value: content) in changes.entries) {
+    overlay.setOverlay(path, content: content, modificationStamp: 0);
+  }
+  final broken = <String>{};
+  final collection = AnalysisContextCollection(includedPaths: changes.keys.toList(), resourceProvider: overlay);
+  for (final path in changes.keys) {
+    final unit = await collection.contextFor(path).currentSession.getResolvedUnit(path);
+    if (unit is! ResolvedUnitResult || _errorCount(unit) > (report.errors[path] ?? 0)) broken.add(path);
+  }
+  await collection.dispose();
+  return broken;
+}
+
+int _errorCount(ResolvedUnitResult unit) => unit.diagnostics.where((d) => d.severity == Severity.error).length;
 
 bool isFlutterClass(Element? e, String name) =>
     e is InterfaceElement && e.name == name && e.library.uri.toString().startsWith('package:flutter/');

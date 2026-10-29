@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:args/command_runner.dart';
 import 'package:flutter_turbo/src/engine.dart';
 import 'package:path/path.dart' as p;
@@ -60,20 +59,22 @@ class FixCommand extends Command<void> {
     for (final f in report.findings.where((f) => f.autoFix)) {
       byFile.putIfAbsent(f.path, () => []).add(f);
     }
+    final before = {for (final path in byFile.keys) path: File(path).readAsStringSync()};
+    final after = {
+      for (final MapEntry(key: path, value: findings) in byFile.entries)
+        path: applyEdits(before[path]!, [for (final f in findings) ...f.edits]),
+    };
+    final broken = await wouldBreak(report, after);
     var fixed = 0, files = 0;
     for (final MapEntry(key: path, value: findings) in byFile.entries) {
-      final edits = [for (final f in findings) ...f.edits];
-      final file = File(path);
-      final before = file.readAsStringSync();
-      final after = applyEdits(before, edits);
-      if (_hasSyntaxErrors(after) && !_hasSyntaxErrors(before)) {
+      if (broken.contains(path)) {
         stderr.writeln('Skipped ${p.relative(path)}: the fix would break it. This is a turbo bug, please report it.');
         continue;
       }
-      file.writeAsStringSync(after);
+      File(path).writeAsStringSync(after[path]!);
       fixed += findings.length;
       files++;
-      print('${p.relative(path)}\n${diff(before, edits)}');
+      print('${p.relative(path)}\n${diff(before[path]!, [for (final f in findings) ...f.edits])}');
     }
     final suggest = report.findings.where((f) => !f.autoFix).length;
     print(
@@ -97,5 +98,3 @@ Future<Report> _analyze(List<String> rest) async {
   }
   return report;
 }
-
-bool _hasSyntaxErrors(String source) => parseString(content: source, throwIfDiagnostics: false).errors.isNotEmpty;
