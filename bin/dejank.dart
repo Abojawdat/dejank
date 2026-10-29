@@ -1,13 +1,16 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:dejank/src/engine.dart';
+import 'package:dejank/src/measure.dart';
 import 'package:path/path.dart' as p;
 
 Future<void> main(List<String> args) async {
   final runner = CommandRunner<void>('dejank', 'Finds slow Flutter code, fixes it, and proves it.')
     ..addCommand(ScanCommand())
-    ..addCommand(FixCommand());
+    ..addCommand(FixCommand())
+    ..addCommand(MeasureCommand());
   try {
     await runner.run(args);
   } on UsageException catch (e) {
@@ -81,6 +84,69 @@ class FixCommand extends Command<void> {
       'Fixed $fixed problems in $files files.'
       '${suggest > 0 ? ' $suggest need a human, see `dejank scan`.' : ''}',
     );
+  }
+}
+
+class MeasureCommand extends Command<void> {
+  @override
+  final name = 'measure';
+  @override
+  final description = 'Run a test that uses dejank_meter, save its numbers, and compare them with the last run.';
+  @override
+  String get invocation => 'dejank measure <test file> [-d device]';
+
+  MeasureCommand() {
+    argParser.addOption('device', abbr: 'd', help: 'Run on this device. Frame times need a real device.');
+  }
+
+  @override
+  Future<void> run() async {
+    final test = argResults!.rest.firstOrNull ?? usageException('Which test file should run?');
+    if (!File(test).existsSync()) usageException('Not found: $test');
+    var root = File(test).absolute.parent;
+    while (!File(p.join(root.path, 'pubspec.yaml')).existsSync()) {
+      if (root.parent.path == root.path) usageException('No pubspec.yaml above $test');
+      root = root.parent;
+    }
+    final device = argResults!.option('device');
+    print('Running ${p.relative(test)}...');
+    final result = await Process.run(
+      'flutter',
+      [
+        'test',
+        p.relative(File(test).absolute.path, from: root.path),
+        if (device != null) ...['-d', device],
+      ],
+      workingDirectory: root.path,
+      runInShell: Platform.isWindows,
+    );
+    if (result.exitCode != 0) {
+      stderr
+        ..writeln(result.stdout)
+        ..writeln(result.stderr)
+        ..writeln('The test failed, nothing was saved.');
+      exitCode = 1;
+      return;
+    }
+    final runs = parseRuns(LineSplitter.split('${result.stdout}'));
+    if (runs.isEmpty) {
+      stderr.writeln("No numbers found. Wrap the steps in measure('name', () async { ... }) from dejank_meter.");
+      exitCode = 1;
+      return;
+    }
+    var first = true;
+    for (final MapEntry(key: name, value: now) in runs.entries) {
+      final file = File(p.join(root.path, '.dejank', '${name.replaceAll(RegExp(r'[^\w-]'), '_')}.json'));
+      final before = file.existsSync()
+          ? Run.fromJson(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>)
+          : null;
+      if (before != null) first = false;
+      print('\n${table(name, before, now)}');
+      file
+        ..createSync(recursive: true)
+        ..writeAsStringSync(jsonEncode(now.toJson()));
+    }
+    if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
   }
 }
 
