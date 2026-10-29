@@ -134,6 +134,12 @@ class MeasureCommand extends Command<void> {
       exitCode = 1;
       return;
     }
+    final lib = Directory(p.join(root.path, 'lib'));
+    final own = {
+      if (lib.existsSync())
+        for (final f in lib.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart')))
+          for (final m in RegExp(r'class\s+(\w+)').allMatches(f.readAsStringSync())) m[1]!,
+    };
     var first = true;
     for (final MapEntry(key: name, value: now) in runs.entries) {
       final file = File(p.join(root.path, '.dejank', '${name.replaceAll(RegExp(r'[^\w-]'), '_')}.json'));
@@ -141,7 +147,7 @@ class MeasureCommand extends Command<void> {
           ? Run.fromJson(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>)
           : null;
       if (before != null) first = false;
-      print('\n${table(name, before, now)}');
+      print('\n${table(name, before, now, own: own)}');
       file
         ..createSync(recursive: true)
         ..writeAsStringSync(jsonEncode(now.toJson()));

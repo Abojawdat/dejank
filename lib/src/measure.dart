@@ -31,18 +31,21 @@ Map<String, Run> parseRuns(Iterable<String> lines) {
   return runs;
 }
 
-String table(String name, Run? before, Run now) {
+String table(String name, Run? before, Run now, {Set<String> own = const {}}) {
   final out = StringBuffer();
   void row(String label, num? b, num n, String Function(num) format) {
     final change = b == null || b == 0 || n == b ? '' : _percent((n - b) / b);
     final was = before == null ? '' : (b == null ? '-' : format(b)).padLeft(10);
-    out.writeln('${label.padRight(28)}$was${format(n).padLeft(10)}  $change'.trimRight());
+    final short = label.length > 27 ? '${label.substring(0, 26)}…' : label;
+    out.writeln('${short.padRight(28)}$was${format(n).padLeft(10)}  $change'.trimRight());
   }
 
   out.writeln('${name.padRight(28)}${before == null ? '' : 'before'.padLeft(10)}${'now'.padLeft(10)}');
   row('widget builds', before?.total, now.total, _count);
   int delta(String w) => ((now.builds[w] ?? 0) - (before?.builds[w] ?? 0)).abs();
-  final widgets = {...now.builds.keys, ...?before?.builds.keys}.where((w) => before == null || delta(w) > 0).toList()
+  final all = {...now.builds.keys, ...?before?.builds.keys};
+  final mine = all.where(own.contains);
+  final widgets = (mine.isEmpty ? all : mine).where((w) => before == null || delta(w) > 0).toList()
     ..sort((a, b) => before == null ? now.builds[b]!.compareTo(now.builds[a]!) : delta(b).compareTo(delta(a)));
   for (final w in widgets.take(5)) {
     row('  $w', before == null ? null : before.builds[w] ?? 0, now.builds[w] ?? 0, _count);

@@ -29,6 +29,18 @@ void main() {
     );
   });
 
+  test("lists the app's own widgets, not Flutter's", () {
+    final before = Run({'ProductTile': 4000, 'NotificationListener<LayoutChangedNotification>': 9000});
+    final now = Run({'ProductTile': 0, 'NotificationListener<LayoutChangedNotification>': 400});
+    expect(
+      table('search', before, now, own: {'ProductTile'}),
+      'search                          before       now\n'
+      'widget builds                   13,000       400  -97%\n'
+      '  ProductTile                    4,000         0  -100%\n',
+    );
+    expect(table('search', before, now), contains('  NotificationListener<Lay…      9,000       400  -96%\n'));
+  });
+
   test('first run shows the most built widgets', () {
     expect(
       table('search', null, Run({'Text': 5, 'ProductTile': 4000})),
