@@ -6,7 +6,7 @@
 - Owner: Mohammad Othman (GitHub **Abojawdat**). Explain things in simple English.
 - Why this idea was chosen: ranked #2 most viral of 45 ideas, and the best one that can also be paid
   (open core). Every Flutter developer is a possible user. Full brainstorm: `docs/ideas-context.md`.
-- Status (2026-10-29): phases 1–4 done (engine, all 6 v1 rules, demo app). See "Build phases" below.
+- Status (2026-10-31): phases 1–5 done (engine, all 6 v1 rules, demo app, measure). See "Build phases" below.
 - Environment: Flutter 3.44.8 stable, Dart 3.12.2, macOS arm64.
 - Name: `dejank` (CLI, command `dejank`) + `dejank_meter` (measure package), both free on pub.dev (checked
   2026-10-29). Renamed from `flutter_turbo`: the `turbo` command clashes with Turborepo, and "turbo" is crowded.
@@ -98,7 +98,10 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    `serial-awaits-main`. Engine `lib/src/project.dart` finds tile widgets / helper methods used inside lists
    (and what they use), skipping `onTap:`-style callbacks, so list rules also see code outside the list.
 4. ✅ Demo app `example/slow_app` (200-product shop; all 6 rules fire, 4 auto-fixes; fixed copy analyzes clean).
-5. `dejank_meter` + `dejank measure`.
+5. ✅ `dejank_meter` + `dejank measure`. Proof on a real Android phone (2026-10-31), demo search test, before → after
+   `dejank fix` (4 auto-fixes only): widget builds 213,677 → 14,051 (-93%), ProductTile 4,620 → 240 (-95%),
+   avg build 22.9 → 7.7 ms (-66%), slow frames 43 → 6 of ~140 (-86%). Debug mode (the build hook needs it), so
+   frame times are relative; build counts are exact.
 6. Live rebuild overlay.
 
 ## How the code works
