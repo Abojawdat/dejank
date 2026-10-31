@@ -25,7 +25,7 @@ class ScanCommand extends Command<void> {
   @override
   final description = 'List slow code with file:line, impact, and whether `dejank fix` can fix it.';
   @override
-  String get invocation => 'dejank scan [path]';
+  String get invocation => 'dejank scan [path, default lib]';
 
   @override
   Future<void> run() async {
@@ -42,8 +42,9 @@ class ScanCommand extends Command<void> {
     print(
       report.findings.isEmpty
           ? 'No problems found.'
-          : '\n${report.findings.length} problems: $auto auto-fixable (run `dejank fix`), $suggest need a human.',
+          : '\n${_count(report.findings.length, 'problem')}: $auto auto-fixable (run `dejank fix`), $suggest need a human.',
     );
+    if (report.findings.isNotEmpty) exitCode = 1;
   }
 }
 
@@ -53,7 +54,11 @@ class FixCommand extends Command<void> {
   @override
   final description = 'Apply the safe fixes and show what changed.';
   @override
-  String get invocation => 'dejank fix [path]';
+  String get invocation => 'dejank fix [path, default lib]';
+
+  FixCommand() {
+    argParser.addFlag('dry-run', negatable: false, help: 'Show what would change without writing any file.');
+  }
 
   @override
   Future<void> run() async {
@@ -68,20 +73,21 @@ class FixCommand extends Command<void> {
         path: applyEdits(before[path]!, [for (final f in findings) ...f.edits]),
     };
     final broken = await wouldBreak(report, after);
+    final dryRun = argResults!.flag('dry-run');
     var fixed = 0, files = 0;
     for (final MapEntry(key: path, value: findings) in byFile.entries) {
       if (broken.contains(path)) {
         stderr.writeln('Skipped ${p.relative(path)}: the fix would break it. This is a dejank bug, please report it.');
         continue;
       }
-      File(path).writeAsStringSync(after[path]!);
+      if (!dryRun) File(path).writeAsStringSync(after[path]!);
       fixed += findings.length;
       files++;
       print('${p.relative(path)}\n${diff(before[path]!, [for (final f in findings) ...f.edits])}');
     }
     final suggest = report.findings.where((f) => !f.autoFix).length;
     print(
-      'Fixed $fixed problems in $files files.'
+      '${dryRun ? 'Would fix' : 'Fixed'} ${_count(fixed, 'problem')} in ${_count(files, 'file')}.'
       '${suggest > 0 ? ' $suggest need a human, see `dejank scan`.' : ''}',
     );
   }
@@ -151,13 +157,14 @@ class MeasureCommand extends Command<void> {
       file
         ..createSync(recursive: true)
         ..writeAsStringSync(jsonEncode(now.toJson()));
+      File(p.join(file.parent.path, '.gitignore')).writeAsStringSync('*\n');
     }
     if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
   }
 }
 
 Future<Report> _analyze(List<String> rest) async {
-  final path = rest.isEmpty ? '.' : rest.first;
+  final path = rest.firstOrNull ?? (Directory('lib').existsSync() ? 'lib' : '.');
   if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
     throw UsageException('Not found: $path', 'dejank scan [path]');
   }
@@ -170,3 +177,5 @@ Future<Report> _analyze(List<String> rest) async {
   }
   return report;
 }
+
+String _count(int n, String word) => '$n $word${n == 1 ? '' : 's'}';

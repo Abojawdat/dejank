@@ -62,6 +62,7 @@ lib/product_tile.dart:15:14  intrinsic-in-list  medium  suggest
 Then commit (git is your undo) and run:
 
 ```sh
+dejank fix --dry-run   # see the diff, change nothing
 dejank fix
 ```
 
@@ -86,6 +87,10 @@ Fixed 4 problems in 2 files. 3 need a human, see `dejank scan`.
 | `serial-awaits-main` | several independent `await`s before `runApp` delay the first frame | suggest → start them together |
 
 List rules also follow your tile widgets and helper methods into other files, so they see the code that actually runs inside the list.
+
+With no path, dejank checks `lib/`. To skip generated or copied-in code, list it under `analyzer: exclude:` in your `analysis_options.yaml`; dejank follows it.
+
+In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds problems.
 
 Adding `const` isn't here on purpose: turn on the official `prefer_const_constructors` lint and run `dart fix --apply`.
 
@@ -126,7 +131,7 @@ dejank fix
 dejank measure integration_test/search_test.dart -d <device>
 ```
 
-The numbers are saved in `.dejank/` (add it to `.gitignore`). Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
+The numbers are saved in `.dejank/`, which dejank keeps out of git. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
 
 `dejank_meter` is a dev dependency: it never ships inside your app.
 
