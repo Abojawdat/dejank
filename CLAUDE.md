@@ -89,7 +89,7 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    rebuild overlay on top using the same counter.
 4. **Demo app:** small fake shop app in `example/slow_app` that triggers every rule.
 5. **Licence (2026-10-31): PolyForm Shield 1.0.0**, not MIT/AGPL. Goal: stop renamed copies (free or paid). Free to use
-   anywhere; not OSI, so a few fewer pub points. Not for selling.
+   anywhere; not OSI, so pub.dev gives 150/160 (owner accepted, 2026-10-31). Not for selling.
 
 ## Build phases
 
