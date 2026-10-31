@@ -2,6 +2,7 @@
 
 - `shrinkwrap-in-column` now finds lists returned from `if` / `switch` and from state-management builders (`BlocBuilder`, Provider's `Consumer`, Riverpod, GetX, MobX), the usual BLoC screen shape. It no longer suggests `Expanded` for a `Column` inside a scroll view.
 - List rules no longer flag a screen that a list item opens on tap through a helper method (a wrong warning).
+- Colors, numbered findings, emojis and a summary in the terminal (plain text when piped; `NO_COLOR` / `FORCE_COLOR` respected).
 - `dejank scan` exits with code 1 when it finds problems, for CI and pre-commit hooks.
 - `dejank fix --dry-run` shows the diff without writing anything.
 - With no path, `scan` and `fix` check `lib/`.

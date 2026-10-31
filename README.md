@@ -90,7 +90,7 @@ List rules also follow your tile widgets and helper methods into other files, so
 
 With no path, dejank checks `lib/`. To skip generated or copied-in code, list it under `analyzer: exclude:` in your `analysis_options.yaml`; dejank follows it.
 
-In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds problems.
+In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds problems. In a terminal the output has colors, numbers and emojis; piped into a file or a CI log it stays plain text. `NO_COLOR=1` turns the colors off, `FORCE_COLOR=1` turns them on (for example in GitHub Actions).
 
 Adding `const` isn't here on purpose: turn on the official `prefer_const_constructors` lint and run `dart fix --apply`.
 

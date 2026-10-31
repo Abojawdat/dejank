@@ -29,22 +29,44 @@ class ScanCommand extends Command<void> {
 
   @override
   Future<void> run() async {
-    final report = await _analyze(argResults!.rest);
-    for (final f in report.findings) {
-      print(
-        '${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.rule.impact}  '
-        '${f.autoFix ? 'auto' : 'suggest'}',
-      );
-      print('  ${f.message.replaceAll('\n', '\n  ')}');
-    }
+    final report = await _analyze(name, argResults!.rest);
     final auto = report.findings.where((f) => f.autoFix).length;
     final suggest = report.findings.length - auto;
-    print(
-      report.findings.isEmpty
-          ? 'No problems found.'
-          : '\n${_count(report.findings.length, 'problem')}: $auto auto-fixable (run `dejank fix`), $suggest need a human.',
-    );
     if (report.findings.isNotEmpty) exitCode = 1;
+    if (!_fancy) {
+      for (final f in report.findings) {
+        print(
+          '${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.rule.impact}  '
+          '${f.autoFix ? 'auto' : 'suggest'}',
+        );
+        print('  ${f.message.replaceAll('\n', '\n  ')}');
+      }
+      print(
+        report.findings.isEmpty
+            ? 'No problems found.'
+            : '\n${_count(report.findings.length, 'problem')}: $auto auto-fixable (run `dejank fix`), $suggest need a human.',
+      );
+      return;
+    }
+    for (final (i, f) in report.findings.indexed) {
+      print('${_badge(i + 1)} ${_bold('${p.relative(f.path)}:${f.line}:${f.column}')}');
+      print(
+        '    ${f.rule.impact == 'high' ? '🔴' : '🟡'} ${_cyan(f.rule.name)} ${_dim('·')} ${f.rule.impact} impact '
+        '${_dim('·')} ${f.autoFix ? _green('🔧 auto-fix') : _amber('💡 suggestion')}',
+      );
+      print('    ${f.message.replaceAll('\n', '\n    ')}\n');
+    }
+    print(_bar());
+    if (report.findings.isEmpty) {
+      print(' ✨ ${_bold('No problems found.')} Smooth as butter.');
+    } else {
+      print(
+        ' 🔎 ${_bold(_count(report.findings.length, 'problem'))}   🔧 ${_green('$auto auto-fixable')}   '
+        '💡 ${_amber('$suggest need a human')}',
+      );
+      if (auto > 0) print(' 👉 Run ${_cyan('dejank fix')} to fix ${auto == 1 ? 'it' : 'those $auto'} now.');
+    }
+    _credit();
   }
 }
 
@@ -62,7 +84,7 @@ class FixCommand extends Command<void> {
 
   @override
   Future<void> run() async {
-    final report = await _analyze(argResults!.rest);
+    final report = await _analyze(name, argResults!.rest);
     final byFile = <String, List<Finding>>{};
     for (final f in report.findings.where((f) => f.autoFix)) {
       byFile.putIfAbsent(f.path, () => []).add(f);
@@ -83,13 +105,43 @@ class FixCommand extends Command<void> {
       if (!dryRun) File(path).writeAsStringSync(after[path]!);
       fixed += findings.length;
       files++;
-      print('${p.relative(path)}\n${diff(before[path]!, [for (final f in findings) ...f.edits])}');
+      final changes = diff(before[path]!, [for (final f in findings) ...f.edits]);
+      if (!_fancy) {
+        print('${p.relative(path)}\n$changes');
+        continue;
+      }
+      print('${_badge(files)} ${_bold(p.relative(path))}');
+      for (final line in changes.trimRight().split('\n')) {
+        print(
+          '  ${switch (line) {
+            _ when line.startsWith('  - ') => _red(line),
+            _ when line.startsWith('  + ') => _green(line),
+            _ => _dim(line),
+          }}',
+        );
+      }
+      print('');
     }
     final suggest = report.findings.where((f) => !f.autoFix).length;
+    final summary = '${_count(fixed, 'problem')} in ${_count(files, 'file')}';
+    if (!_fancy) {
+      print(
+        '${dryRun ? 'Would fix' : 'Fixed'} $summary.'
+        '${suggest > 0 ? ' $suggest need a human, see `dejank scan`.' : ''}',
+      );
+      return;
+    }
+    print(_bar());
     print(
-      '${dryRun ? 'Would fix' : 'Fixed'} ${_count(fixed, 'problem')} in ${_count(files, 'file')}.'
-      '${suggest > 0 ? ' $suggest need a human, see `dejank scan`.' : ''}',
+      dryRun
+          ? ' 👀 ${_bold('Dry run:')} would fix $summary. Nothing was written.'
+          : fixed == 0
+          ? ' ✨ ${_bold('Nothing to fix automatically.')}'
+          : ' ✅ ${_bold('Fixed $summary.')}',
     );
+    if (suggest > 0) print(' 💡 ${_amber('$suggest need a human:')} run ${_cyan('dejank scan')} to see them.');
+    if (fixed > 0 && !dryRun) print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after.');
+    _credit();
   }
 }
 
@@ -115,7 +167,12 @@ class MeasureCommand extends Command<void> {
       root = root.parent;
     }
     final device = argResults!.option('device');
-    print('Running ${p.relative(test)}...');
+    if (_fancy) {
+      _header(name, p.relative(test));
+      print(' ⏱  Running the test${device == null ? '' : ' on $device'}...');
+    } else {
+      print('Running ${p.relative(test)}...');
+    }
     final result = await Process.run(
       'flutter',
       [
@@ -147,27 +204,67 @@ class MeasureCommand extends Command<void> {
           for (final m in RegExp(r'class\s+(\w+)').allMatches(f.readAsStringSync())) m[1]!,
     };
     var first = true;
+    final wins = <String>[];
     for (final MapEntry(key: name, value: now) in runs.entries) {
       final file = File(p.join(root.path, '.dejank', '${name.replaceAll(RegExp(r'[^\w-]'), '_')}.json'));
       final before = file.existsSync()
           ? Run.fromJson(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>)
           : null;
       if (before != null) first = false;
-      print('\n${table(name, before, now, own: own)}');
+      final text = table(name, before, now, own: own);
+      print('\n${_fancy ? _colorTable(text) : text}');
+      if (before != null) wins.add(_win(name, before, now));
       file
         ..createSync(recursive: true)
         ..writeAsStringSync(jsonEncode(now.toJson()));
       File(p.join(file.parent.path, '.gitignore')).writeAsStringSync('*\n');
     }
-    if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
+    if (!_fancy) {
+      if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
+      return;
+    }
+    print(_bar());
+    for (final w in wins) {
+      print(' $w');
+    }
+    if (first) {
+      print(' 📁 Saved in .dejank/. Change something (like ${_cyan('dejank fix')}) and run again to compare.');
+    }
+    _credit();
+  }
+
+  static String _win(String name, Run before, Run now) {
+    String change(num b, num n, String what) {
+      if (b == 0 || n == b) return 'same $what';
+      final pct = ((n - b).abs() / b * 100).round();
+      return n < b ? _green('$pct% fewer $what') : _red('$pct% more $what');
+    }
+
+    final slow = [before.frames?['slow'], now.frames?['slow']];
+    return '${now.total < before.total ? '🎉' : '📊'} ${_bold(name)}: ${change(before.total, now.total, 'widget builds')}'
+        '${slow.contains(null) ? '' : ', ${change(slow[0]!, slow[1]!, 'slow frames')}'}';
+  }
+
+  static String _colorTable(String text) {
+    final lines = text.trimRight().split('\n');
+    return [
+      _dim(lines.first),
+      for (final line in lines.skip(1))
+        line.replaceFirstMapped(RegExp(r'([+-]\d+%)$'), (m) {
+          final pct = m[1]!;
+          if (line.startsWith('frames ')) return _dim(pct);
+          return pct.startsWith('-') ? _green(pct) : _red(pct);
+        }),
+    ].join('\n');
   }
 }
 
-Future<Report> _analyze(List<String> rest) async {
+Future<Report> _analyze(String command, List<String> rest) async {
   final path = rest.firstOrNull ?? (Directory('lib').existsSync() ? 'lib' : '.');
   if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
     throw UsageException('Not found: $path', 'dejank scan [path]');
   }
+  if (_fancy) _header(command, path);
   final report = await analyze(path);
   if (report.unresolved.isNotEmpty) {
     stderr.writeln(
@@ -179,3 +276,33 @@ Future<Report> _analyze(List<String> rest) async {
 }
 
 String _count(int n, String word) => '$n $word${n == 1 ? '' : 's'}';
+
+final _fancy = switch (Platform.environment) {
+  {'NO_COLOR': _} => false,
+  {'FORCE_COLOR': final force} => force != '0',
+  _ => stdout.hasTerminal && stdout.supportsAnsiEscapes,
+};
+
+String _paint(String s, String code) => _fancy ? '\x1B[${code}m$s\x1B[0m' : s;
+String _bold(String s) => _paint(s, '1');
+String _dim(String s) => _paint(s, '38;5;245');
+String _cyan(String s) => _paint(s, '38;5;81');
+String _green(String s) => _paint(s, '38;5;78');
+String _red(String s) => _paint(s, '38;5;203');
+String _amber(String s) => _paint(s, '38;5;221');
+String _badge(int n) => _paint(' $n ', '1;38;5;16;48;5;208');
+
+const _gradient = [202, 208, 214, 220, 226, 190, 154, 118, 82, 46];
+
+String _bar([int width = 56]) =>
+    [for (var i = 0; i < width; i++) _paint('━', '38;5;${_gradient[i * _gradient.length ~/ width]}')].join();
+
+void _header(String command, String target) {
+  print('\n${_paint(' ⚡ dejank ', '1;38;5;16;48;5;208')} ${_bold(command)} ${_dim(target)}\n');
+}
+
+void _credit() {
+  print(
+    '\n ${_dim('made with')} 💙 ${_dim('by')} ${_bold('Abojawdat')} ${_dim('·')} ⭐ ${_dim('github.com/Abojawdat/dejank')}\n',
+  );
+}
