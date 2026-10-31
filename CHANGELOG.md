@@ -4,6 +4,9 @@
 - New rule `hot-allocation`: `DateFormat`, `NumberFormat`, `RegExp` or `TextPainter` created for every list item or every frame. Constant `RegExp`s are moved to a `static final` automatically.
 - New rule `future-in-build`: `FutureBuilder` / `StreamBuilder` given a Future or Stream created in `build`, so it starts over on every rebuild.
 - New rule `controller-in-build`: controllers, `FocusNode`s and `GlobalKey`s created in `build`.
+- New rule `missing-dispose`: controllers, notifiers, subscriptions and timers a `State` creates but never disposes or cancels. Only objects the State creates itself (not ones handed in through `widget`). Auto-fix adds the line, or the whole `dispose()`.
+- New rule `builder-child`: an `AnimatedBuilder` / `TweenAnimationBuilder` / `ValueListenableBuilder` that rebuilds a subtree which never reads the value. Auto-fix moves it into `child:`; only subtrees proven independent (no animation, no app methods, no fields that can change) are moved.
+- New rule `eager-list`: lists built all at once from data. `ListView(children: ...)` is auto-fixed to `ListView.builder`; a `Column` in a scroll view gets a suggestion. Short lists (`.take(3)`, enum values, literals) are left alone.
 - No more wrong warnings for one-off widgets in lists: only code that repeats (`itemBuilder:`, builder delegates, or `for` / `.map()` / `List.generate` in `children:`) counts as a list item. A search bar or an avatar in a fixed `children:` list is no longer flagged.
 - `intrinsic-in-list`: nested intrinsics are high impact; a single `IntrinsicHeight` is low with honest advice (keep it when the height depends on the content); `IntrinsicWidth` alone is not flagged (chat bubbles need it).
 - `image-cache-size`: suggestions compile when the width is nullable, and `BoxFit.cover` gets advice that fits it.

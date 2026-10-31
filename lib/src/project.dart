@@ -8,12 +8,16 @@ import 'heat.dart';
 
 class Project {
   final listItems = <Element>{};
+  final fixedLists = <Element, int>{};
   final HeatMap heat;
 
   Project(List<ResolvedUnitResult> units) : heat = HeatMap(units) {
     final collector = _Uses();
+    final fixed = _FixedLists(fixedLists);
     for (final unit in units) {
-      unit.unit.accept(collector);
+      unit.unit
+        ..accept(collector)
+        ..accept(fixed);
     }
     final todo = [...collector.roots];
     while (todo.isNotEmpty) {
@@ -136,5 +140,24 @@ class _Uses extends RecursiveAstVisitor<void> {
   void visitSimpleIdentifier(SimpleIdentifier node) {
     final e = node.element;
     if (e is MethodElement || e is TopLevelFunctionElement || e is GetterElement) _use(node, e);
+  }
+}
+
+class _FixedLists extends RecursiveAstVisitor<void> {
+  final Map<Element, int> into;
+  _FixedLists(this.into);
+
+  @override
+  void visitVariableDeclaration(VariableDeclaration node) {
+    super.visitVariableDeclaration(node);
+    final elements = switch (node.initializer) {
+      ListLiteral(:final elements) || SetOrMapLiteral(:final elements) => elements,
+      _ => null,
+    };
+    final e = node.declaredFragment?.element;
+    final list = node.parent;
+    if (elements == null || e == null || list is! VariableDeclarationList || !(list.isFinal || list.isConst)) return;
+    if (elements.any((x) => x is ForElement || x is SpreadElement)) return;
+    into[e.baseElement] = elements.length;
   }
 }

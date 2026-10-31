@@ -109,8 +109,9 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    images): 214,669 → 15,219 (-93%), slow frames 44 → 7 (-84%), avg build 27.1 → 8.9 ms (-67%).
 6. Live rebuild overlay.
 7. 🚧 Deep engine (plan: `docs/deep-engine.md`). Done: heat map `lib/src/heat.dart` (how often code runs, with the
-   call chain) and rules `hot-allocation`, `future-in-build`, `controller-in-build`. Next: flow rules
-   (`missing-dispose`, `builder-child`, `eager-list`), read/write map (`BlocSelector` / `context.select`), deep measure.
+   call chain) and rules `hot-allocation`, `future-in-build`, `controller-in-build`; flow rules `missing-dispose`,
+   `builder-child`, `eager-list`. Every rule was checked by hand on 5 real apps. Next: read/write map
+   (`BlocSelector` / `context.select`), deep measure.
 
 Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1 is ready in CHANGELOG.
 

@@ -78,6 +78,9 @@ dejank fix
 | `hot-allocation` | `DateFormat`, `NumberFormat`, `RegExp` or `TextPainter` created for every list item or on every frame | **auto** for constant `RegExp` → `static final`; suggest otherwise |
 | `future-in-build` | `FutureBuilder(future: load())` / `StreamBuilder(stream: watch())`: a new Future or Stream on every build, so it starts over | suggest → create it once in `initState` |
 | `controller-in-build` | `TextEditingController()`, `ScrollController()`, `FocusNode()`, `GlobalKey()`… created in `build`: state lost on every rebuild, never disposed | suggest → create once, dispose |
+| `missing-dispose` | a `State` creates an `AnimationController`, `TextEditingController`, `ScrollController`, `FocusNode`, `ValueNotifier`, `StreamSubscription` or `Timer` and never disposes or cancels it | **auto** → adds the line (and `dispose()` if missing) |
+| `builder-child` | `AnimatedBuilder` / `TweenAnimationBuilder` / `ValueListenableBuilder` rebuilds a subtree that never reads the animation | **auto** → moves it into `child:` |
+| `eager-list` | `ListView(children: items.map(...))`, or a `Column` in a scroll view built from data: every item built up front | **auto** for `ListView` → `ListView.builder`; suggest otherwise |
 
 ### How often code runs
 

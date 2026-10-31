@@ -7,12 +7,15 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
 import 'project.dart';
+import 'rules/builder_child.dart';
 import 'rules/controller_in_build.dart';
+import 'rules/eager_list.dart';
 import 'rules/future_in_build.dart';
 import 'rules/hot_allocation.dart';
 import 'rules/image_cache_size.dart';
 import 'rules/intrinsic_in_list.dart';
 import 'rules/mediaquery_of.dart';
+import 'rules/missing_dispose.dart';
 import 'rules/opacity_animation.dart';
 import 'rules/serial_awaits_main.dart';
 import 'rules/shrinkwrap_in_column.dart';
@@ -27,6 +30,9 @@ final allRules = <Rule>[
   FutureInBuild(),
   ControllerInBuild(),
   HotAllocation(),
+  MissingDispose(),
+  BuilderChild(),
+  EagerList(),
 ];
 
 abstract class Rule {
