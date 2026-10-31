@@ -56,11 +56,16 @@ class _Uses extends RecursiveAstVisitor<void> {
   void _inside(AstNode node, void Function() visit) {
     final e = _declared(node);
     if (e == null) return visit();
-    if (node is MethodDeclaration && _current.isNotEmpty) members.putIfAbsent(_current.last, () => []).add(e);
+    if (node is MethodDeclaration && _current.isNotEmpty && _entry(node)) {
+      members.putIfAbsent(_current.last, () => []).add(e);
+    }
     _current.add(e);
     visit();
     _current.removeLast();
   }
+
+  static bool _entry(MethodDeclaration m) =>
+      m.name.lexeme == 'build' || m.metadata.any((a) => a.name.name == 'override');
 
   void _use(AstNode node, Element? used) {
     if (used == null || _current.isEmpty) return;

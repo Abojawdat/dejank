@@ -1,6 +1,7 @@
 ## 0.1.1
 
 - `shrinkwrap-in-column` now finds lists returned from `if` / `switch` and from state-management builders (`BlocBuilder`, Provider's `Consumer`, Riverpod, GetX, MobX), the usual BLoC screen shape. It no longer suggests `Expanded` for a `Column` inside a scroll view.
+- List rules no longer flag a screen that a list item opens on tap through a helper method (a wrong warning).
 - pub.dev screenshot.
 
 ## 0.1.0

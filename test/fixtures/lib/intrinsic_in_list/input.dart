@@ -44,11 +44,19 @@ class ItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: IntrinsicHeight(child: Text(title)), // LINT
+      subtitle: _subtitle(),
       trailing: const ItemBadge(),
       // Opened on tap: Details is not part of the list.
       onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const Details())),
+      // Opened from a helper the tap calls: MoreDetails is not part of the list either.
+      onLongPress: () => _open(context),
     );
   }
+
+  Widget _subtitle() => IntrinsicWidth(child: Text(title)); // LINT
+
+  void _open(BuildContext context) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MoreDetails()));
 }
 
 /// Used by ItemTile, so it is in the list too.
@@ -64,4 +72,11 @@ class Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const IntrinsicHeight(child: Text('details'));
+}
+
+class MoreDetails extends StatelessWidget {
+  const MoreDetails({super.key});
+
+  @override
+  Widget build(BuildContext context) => const IntrinsicHeight(child: Text('more'));
 }
