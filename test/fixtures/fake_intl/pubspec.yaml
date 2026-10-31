@@ -1,0 +1,6 @@
+# Stand-in for intl, so rules can be tested on DateFormat and NumberFormat.
+name: intl
+publish_to: none
+
+environment:
+  sdk: ^3.12.0

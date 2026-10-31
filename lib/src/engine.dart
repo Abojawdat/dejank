@@ -7,6 +7,9 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
 import 'project.dart';
+import 'rules/controller_in_build.dart';
+import 'rules/future_in_build.dart';
+import 'rules/hot_allocation.dart';
 import 'rules/image_cache_size.dart';
 import 'rules/intrinsic_in_list.dart';
 import 'rules/mediaquery_of.dart';
@@ -21,6 +24,9 @@ final allRules = <Rule>[
   ShrinkWrapInColumn(),
   IntrinsicInList(),
   SerialAwaitsMain(),
+  FutureInBuild(),
+  ControllerInBuild(),
+  HotAllocation(),
 ];
 
 abstract class Rule {

@@ -108,6 +108,9 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    frame times are relative; build counts are exact. Second run with the pretty CLI (same day, the one in all
    images): 214,669 → 15,219 (-93%), slow frames 44 → 7 (-84%), avg build 27.1 → 8.9 ms (-67%).
 6. Live rebuild overlay.
+7. 🚧 Deep engine (plan: `docs/deep-engine.md`). Done: heat map `lib/src/heat.dart` (how often code runs, with the
+   call chain) and rules `hot-allocation`, `future-in-build`, `controller-in-build`. Next: flow rules
+   (`missing-dispose`, `builder-child`, `eager-list`), read/write map (`BlocSelector` / `context.select`), deep measure.
 
 Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1 is ready in CHANGELOG.
 
@@ -134,6 +137,10 @@ Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1
 
 ## How the code works
 
+- `project.heat.at(node)` says how often a node runs (`Heat.frame` … `Heat.cold`) and the chain that makes it hot.
+  Base sources live in `heat.dart`. It is conservative on purpose (a wrong "every frame" is a bug): only builder-style
+  closures and sync helpers (`map`, `setState`…) inherit heat, other closures and tear-offs are callbacks, calls in
+  `if`/`?:` drop frame heat to event, and `async` functions never get more than event. Checked on 5 real apps.
 - A rule is a class in `lib/src/rules/`, added to `allRules` in `engine.dart`. It returns `Finding`s; a finding with
   `edits` is auto-fixable, one without is "suggest" (the message shows the fix).
 - Tests: `dart test`. Fixtures live in `test/fixtures/lib/<rule_name>/` (a real Flutter package, so fixes are

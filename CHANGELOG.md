@@ -1,5 +1,9 @@
 ## 0.1.3
 
+- **Heat map:** dejank now knows how often code runs (every frame, every list item, every keystroke, every build, events, startup, rare) by following calls, tear-offs and widget creation across files. Findings show the path, like `TripList.build → itemBuilder → TripTile.build → TripTile._price`.
+- New rule `hot-allocation`: `DateFormat`, `NumberFormat`, `RegExp` or `TextPainter` created for every list item or every frame. Constant `RegExp`s are moved to a `static final` automatically.
+- New rule `future-in-build`: `FutureBuilder` / `StreamBuilder` given a Future or Stream created in `build`, so it starts over on every rebuild.
+- New rule `controller-in-build`: controllers, `FocusNode`s and `GlobalKey`s created in `build`.
 - No more wrong warnings for one-off widgets in lists: only code that repeats (`itemBuilder:`, builder delegates, or `for` / `.map()` / `List.generate` in `children:`) counts as a list item. A search bar or an avatar in a fixed `children:` list is no longer flagged.
 - `intrinsic-in-list`: nested intrinsics are high impact; a single `IntrinsicHeight` is low with honest advice (keep it when the height depends on the content); `IntrinsicWidth` alone is not flagged (chat bubbles need it).
 - `image-cache-size`: suggestions compile when the width is nullable, and `BoxFit.cover` gets advice that fits it.

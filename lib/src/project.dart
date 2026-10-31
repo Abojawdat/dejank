@@ -4,11 +4,13 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 
 import 'engine.dart';
+import 'heat.dart';
 
 class Project {
   final listItems = <Element>{};
+  final HeatMap heat;
 
-  Project(List<ResolvedUnitResult> units) {
+  Project(List<ResolvedUnitResult> units) : heat = HeatMap(units) {
     final collector = _Uses();
     for (final unit in units) {
       unit.unit.accept(collector);

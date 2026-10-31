@@ -70,13 +70,24 @@ dejank fix
 | Rule | What it finds | Fix |
 |---|---|---|
 | `mediaquery-of` | `MediaQuery.of(context).size` rebuilds on **every** MediaQuery change, like each frame of the keyboard animation | **auto** → `MediaQuery.sizeOf(context)` (and `paddingOf`, `widthOf`, …) |
-| `opacity-animation` | `AnimatedBuilder` + `Opacity(opacity: c.value)` rebuilds and repaints every frame | **auto** → `FadeTransition(opacity: c)` |
+| `opacity-animation` | `AnimatedBuilder` + `Opacity(opacity: c.value)` rebuilds on every animation frame | **auto** → `FadeTransition(opacity: c)` |
 | `image-cache-size` | `Image.network` in a list decodes every image at full size | **auto** → `cacheWidth` from the width × device pixel ratio |
 | `shrinkwrap-in-column` | `ListView.builder(shrinkWrap: true)` in a `Column` builds every item at once | suggest → `Expanded` or slivers |
-| `intrinsic-in-list` | `IntrinsicHeight` / `IntrinsicWidth` lays out every list item twice | suggest → a fixed size |
+| `intrinsic-in-list` | nested intrinsics in list items (4× layout); a single `IntrinsicHeight` is low impact | suggest |
 | `serial-awaits-main` | several independent `await`s before `runApp` delay the first frame | suggest → start them together |
+| `hot-allocation` | `DateFormat`, `NumberFormat`, `RegExp` or `TextPainter` created for every list item or on every frame | **auto** for constant `RegExp` → `static final`; suggest otherwise |
+| `future-in-build` | `FutureBuilder(future: load())` / `StreamBuilder(stream: watch())`: a new Future or Stream on every build, so it starts over | suggest → create it once in `initState` |
+| `controller-in-build` | `TextEditingController()`, `ScrollController()`, `FocusNode()`, `GlobalKey()`… created in `build`: state lost on every rebuild, never disposed | suggest → create once, dispose |
 
-List rules also follow your tile widgets and helper methods into other files, so they see the code that actually runs inside the list.
+### How often code runs
+
+dejank works out how often every function, method and closure runs: on every frame (`AnimatedBuilder`, `CustomPainter.paint`, scroll and animation listeners, drag gestures), for every list item, on every keystroke, on every build, on events, at startup, or only once in a while (button handlers). It follows calls, tear-offs and widget creation across files, so a finding shows the path that makes it hot:
+
+```
+Creates a new NumberFormat for every list item: TripList.build → itemBuilder → TripTile.build → TripTile._price.
+```
+
+A button handler is never treated as hot, so a `DateFormat` in `onTap:` is left alone.
 
 With no path, dejank checks `lib/`. To skip generated or copied-in code, list it under `analyzer: exclude:` in your `analysis_options.yaml`; dejank follows it.
 

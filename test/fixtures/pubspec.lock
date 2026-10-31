@@ -36,6 +36,13 @@ packages:
       relative: true
     source: path
     version: "0.0.0"
+  intl:
+    dependency: "direct main"
+    description:
+      path: fake_intl
+      relative: true
+    source: path
+    version: "0.0.0"
   material_color_utilities:
     dependency: transitive
     description:
