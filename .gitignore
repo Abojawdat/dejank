@@ -1,3 +1,5 @@
 .dart_tool/
 build/
 .dejank/
+/pubspec.lock
+dejank_meter/pubspec.lock

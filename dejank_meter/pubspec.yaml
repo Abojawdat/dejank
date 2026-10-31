@@ -1,7 +1,9 @@
 name: dejank_meter
 description: Counts widget builds and frame times while a test runs, so `dejank measure` can compare runs.
-version: 0.1.0-dev
-publish_to: none
+version: 0.1.0
+repository: https://github.com/Abojawdat/dejank/tree/main/dejank_meter
+issue_tracker: https://github.com/Abojawdat/dejank/issues
+topics: [performance, testing, flutter]
 
 environment:
   sdk: ^3.12.0
