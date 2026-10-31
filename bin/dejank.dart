@@ -27,12 +27,22 @@ class ScanCommand extends Command<void> {
   @override
   String get invocation => 'dejank scan [path, default lib]';
 
+  ScanCommand() {
+    argParser.addOption(
+      'fail-on',
+      allowed: ['high', 'any', 'never'],
+      defaultsTo: 'high',
+      help: 'Which findings make the exit code 1 (for CI).',
+    );
+  }
+
   @override
   Future<void> run() async {
     final report = await _analyze(name, argResults!.rest);
     final auto = report.findings.where((f) => f.autoFix).length;
     final suggest = report.findings.length - auto;
-    if (report.findings.any((f) => f.impact == 'high')) exitCode = 1;
+    final failOn = argResults!.option('fail-on');
+    if (report.findings.any((f) => failOn == 'any' || (failOn == 'high' && f.impact == 'high'))) exitCode = 1;
     if (!_fancy) {
       for (final f in report.findings) {
         print(
@@ -103,6 +113,20 @@ class FixCommand extends Command<void> {
     };
     final broken = await wouldBreak(report, after);
     final dryRun = argResults!.flag('dry-run');
+    if (!dryRun && byFile.isNotEmpty) {
+      final git = Process.runSync('git', [
+        'status',
+        '--porcelain',
+        '--',
+        ...byFile.keys,
+      ], runInShell: Platform.isWindows);
+      if (git.exitCode == 0 && '${git.stdout}'.trim().isNotEmpty) {
+        stderr.writeln(
+          'Note: some of these files have changes that are not committed. '
+          "dejank's edits will mix with yours; commit first if you want an easy undo.",
+        );
+      }
+    }
     var fixed = 0, files = 0;
     final rules = <String, int>{};
     for (final MapEntry(key: path, value: findings) in byFile.entries) {
@@ -159,15 +183,19 @@ class FixCommand extends Command<void> {
     if (rules.isNotEmpty) print('    ${rules.entries.map((e) => '${e.value}× ${_cyan(e.key)}').join(_dim(' · '))}');
     if (suggest > 0) print(' 💡 ${_amber('$suggest need a human:')} run ${_cyan('dejank scan')} to see them.');
     if (fixed > 0 && !dryRun) {
-      final saved = Directory('.dejank').existsSync()
-          ? Directory('.dejank').listSync().whereType<File>().where((f) => f.path.endsWith('.json')).toList()
-          : <File>[];
+      final saved = <String, File>{};
+      if (Directory('.dejank').existsSync()) {
+        for (final f in Directory('.dejank').listSync().whereType<File>().where((f) => f.path.endsWith('.json'))) {
+          final slug = p.basename(f.path).replaceFirst(RegExp(r'(\.baseline)?\.json$'), '');
+          if (f.path.endsWith('.baseline.json') || !saved.containsKey(slug)) saved[slug] = f;
+        }
+      }
       if (saved.isEmpty) print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after.');
-      for (final f in saved) {
+      for (final MapEntry(key: slug, value: f) in saved.entries) {
         final run = Run.fromJson(jsonDecode(f.readAsStringSync()) as Map<String, dynamic>);
         print(
-          ' 📏 Last measured: ${_bold(p.basenameWithoutExtension(f.path))} had ${_bold(thousands(run.total))} widget builds. '
-          'Run ${_cyan('dejank measure')} again to see how much faster it is now.',
+          ' 📏 ${f.path.endsWith('.baseline.json') ? 'Baseline' : 'Last measured'}: ${_bold(slug)} had '
+          '${_bold(thousands(run.total))} widget builds. Run ${_cyan('dejank measure')} again to see how much faster it is now.',
         );
       }
     }
@@ -184,7 +212,13 @@ class MeasureCommand extends Command<void> {
   String get invocation => 'dejank measure <test file> [-d device]';
 
   MeasureCommand() {
-    argParser.addOption('device', abbr: 'd', help: 'Run on this device. Frame times need a real device.');
+    argParser
+      ..addOption('device', abbr: 'd', help: 'Run on this device. Frame times need a real device.')
+      ..addFlag(
+        'baseline',
+        negatable: false,
+        help: 'Save this run as the baseline. Later runs compare against it instead of the last run.',
+      );
   }
 
   @override
@@ -234,11 +268,17 @@ class MeasureCommand extends Command<void> {
           for (final m in RegExp(r'class\s+(\w+)').allMatches(f.readAsStringSync())) m[1]!,
     };
     var first = true;
+    final setBaseline = argResults!.flag('baseline');
+    var vsBaseline = false;
     final wins = <String>[];
     for (final MapEntry(key: name, value: now) in runs.entries) {
-      final file = File(p.join(root.path, '.dejank', '${name.replaceAll(RegExp(r'[^\w-]'), '_')}.json'));
-      final before = file.existsSync()
-          ? Run.fromJson(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>)
+      final slug = name.replaceAll(RegExp(r'[^\w-]'), '_');
+      final file = File(p.join(root.path, '.dejank', '$slug.json'));
+      final baseline = File(p.join(root.path, '.dejank', '$slug.baseline.json'));
+      final from = baseline.existsSync() && !setBaseline ? baseline : file;
+      vsBaseline |= from == baseline;
+      final before = from.existsSync()
+          ? Run.fromJson(jsonDecode(from.readAsStringSync()) as Map<String, dynamic>)
           : null;
       if (before != null) first = false;
       final text = table(name, before, now, own: own);
@@ -247,9 +287,16 @@ class MeasureCommand extends Command<void> {
       file
         ..createSync(recursive: true)
         ..writeAsStringSync(jsonEncode(now.toJson()));
+      if (setBaseline) baseline.writeAsStringSync(jsonEncode(now.toJson()));
       File(p.join(file.parent.path, '.gitignore')).writeAsStringSync('*\n');
     }
+    final note = setBaseline
+        ? 'Saved as the baseline: later runs compare against it.'
+        : vsBaseline
+        ? 'Compared with the baseline (dejank measure --baseline replaces it).'
+        : null;
     if (!_fancy) {
+      if (note != null) print(note);
       if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
       return;
     }
@@ -257,6 +304,7 @@ class MeasureCommand extends Command<void> {
     for (final w in wins) {
       print(' $w');
     }
+    if (note != null) print(' 📌 $note');
     if (first) {
       print(' 📁 Saved in .dejank/. Change something (like ${_cyan('dejank fix')}) and run again to compare.');
     }

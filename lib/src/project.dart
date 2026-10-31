@@ -24,7 +24,20 @@ class Project {
   }
 }
 
-const listWidgets = {'ListView', 'GridView', 'SliverList', 'SliverGrid', 'SliverChildBuilderDelegate'};
+const listWidgets = {
+  'ListView',
+  'GridView',
+  'SliverList',
+  'SliverGrid',
+  'SliverChildBuilderDelegate',
+  'PageView',
+  'AnimatedList',
+  'SliverAnimatedList',
+  'AnimatedGrid',
+  'SliverAnimatedGrid',
+  'ReorderableListView',
+  'SliverReorderableList',
+};
 
 const _builderArgs = {'itemBuilder', 'separatorBuilder', 'builder', _positional};
 const _positional = '';
@@ -45,6 +58,11 @@ bool inListItem(AstNode node, [Project? project]) {
     }
     final type = n is InstanceCreationExpression ? n.constructorName.type.element : null;
     if (listWidgets.any((c) => isFlutterClass(type, c))) return repeated || _builderArgs.contains(via);
+    if (via == 'itemBuilder' &&
+        type is InterfaceElement &&
+        !type.library.uri.toString().startsWith('package:flutter/')) {
+      return true;
+    }
     if (project != null && project.listItems.contains(_declared(n))) return true;
   }
   return false;

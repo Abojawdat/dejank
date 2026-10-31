@@ -78,9 +78,13 @@ class _Visitor extends RecursiveAstVisitor<void> {
         rule,
         unit,
         node.offset,
-        'Use MediaQuery.$replacement(context): rebuilds only when `$method` changes, '
-        'not on every MediaQuery change (like each frame of the keyboard animation).',
+        method == 'viewInsets'
+            ? 'Use MediaQuery.viewInsetsOf(context): rebuilds only when `viewInsets` changes, not on other '
+                  'MediaQuery changes. The keyboard changes viewInsets on every frame, so this saves little.'
+            : 'Use MediaQuery.$replacement(context): rebuilds only when `$method` changes, '
+                  'not on every MediaQuery change (like each frame of the keyboard animation).',
         edits: [Edit(node.methodName.offset, read.end - node.methodName.offset, '$replacement$args')],
+        impact: method == 'viewInsets' ? 'low' : null,
       ),
     );
   }

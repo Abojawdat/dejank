@@ -5,7 +5,12 @@
 - `image-cache-size`: suggestions compile when the width is nullable, and `BoxFit.cover` gets advice that fits it.
 - `serial-awaits-main`: low impact, warns that `.wait` wraps errors in `ParallelWaitError`, and indents multi-line calls properly.
 - `// dejank:ignore <rule>` on the line or the line above silences a finding.
-- `dejank scan` exits with code 1 only for high-impact findings.
+- `dejank scan` exits with code 1 only for high-impact findings; `--fail-on=high|any|never` to choose.
+- `opacity-animation` is medium impact with a correct message: Opacity does not repaint its child, the saving is the rebuild on every frame.
+- `mediaquery-of` on `viewInsets` is low impact and says why (the keyboard changes viewInsets on every frame).
+- List items are also found in `PageView`, `AnimatedList`, `ReorderableListView` and any widget with an `itemBuilder:` (like `PagedListView` or `MasonryGridView`).
+- `dejank measure --baseline` keeps a fixed "before" to compare against.
+- `dejank fix` warns when the files it changes have uncommitted edits.
 - `dejank fix` no longer counts overlapping fixes it could not apply, and re-formats changed files that were `dart format`-clean before.
 
 ## 0.1.2

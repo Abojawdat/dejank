@@ -36,6 +36,13 @@ class Screen extends StatelessWidget {
             ),
           ),
         ),
+        Expanded(
+          child: PageView.builder(itemBuilder: (_, i) => IntrinsicHeight(child: Text(items[i]))), // LINT
+        ),
+        // The app's own (or another package's) list widget with an itemBuilder.
+        Expanded(child: MyList(itemBuilder: (_, i) => IntrinsicHeight(child: Text(items[i])))), // LINT
+        // Fixed pages, built once each.
+        Expanded(child: PageView(children: const [IntrinsicHeight(child: Text('intro'))])),
         // A chat bubble shrinks to its text: IntrinsicWidth alone is not flagged.
         Expanded(
           child: ListView.builder(
@@ -117,4 +124,12 @@ class SearchBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const IntrinsicHeight(child: Text('search'));
+}
+
+class MyList extends StatelessWidget {
+  const MyList({super.key, required this.itemBuilder});
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) => ListView.builder(itemBuilder: itemBuilder);
 }

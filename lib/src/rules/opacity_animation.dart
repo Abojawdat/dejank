@@ -11,7 +11,7 @@ class OpacityAnimation extends Rule {
   @override
   final name = 'opacity-animation';
   @override
-  final impact = 'high';
+  final impact = 'medium';
 
   @override
   List<Finding> check(ResolvedUnitResult unit, Project project) {
@@ -83,8 +83,8 @@ class _Visitor extends RecursiveAstVisitor<void> {
         rule,
         unit,
         node.offset,
-        'Use FadeTransition(opacity: ${animation.toSource()}, ...): this rebuilds and repaints on every '
-        'animation frame; FadeTransition only changes the opacity of an existing layer.',
+        'Use FadeTransition(opacity: ${animation.toSource()}, ...): AnimatedBuilder rebuilds this Opacity on every '
+        'animation frame; FadeTransition updates the opacity of the existing layer with no rebuild.',
         edits: edits,
       ),
     );

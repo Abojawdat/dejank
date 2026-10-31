@@ -80,7 +80,7 @@ List rules also follow your tile widgets and helper methods into other files, so
 
 With no path, dejank checks `lib/`. To skip generated or copied-in code, list it under `analyzer: exclude:` in your `analysis_options.yaml`; dejank follows it.
 
-In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds problems. In a terminal the output has colors, numbers and emojis; piped into a file or a CI log it stays plain text. `NO_COLOR=1` turns the colors off, `FORCE_COLOR=1` turns them on (for example in GitHub Actions).
+In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds a high-impact problem (`--fail-on=any` or `--fail-on=never` to change that). To keep something on purpose, put `// dejank:ignore <rule>` on that line or the line above. In a terminal the output has colors, numbers and emojis; piped into a file or a CI log it stays plain text. `NO_COLOR=1` turns the colors off, `FORCE_COLOR=1` turns them on (for example in GitHub Actions).
 
 Adding `const` isn't here on purpose: turn on the official `prefer_const_constructors` lint and run `dart fix --apply`.
 
@@ -123,7 +123,7 @@ dejank measure integration_test/search_test.dart -d <device>
 
 <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
 
-The numbers are saved in `.dejank/`, which dejank keeps out of git. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
+The numbers are saved in `.dejank/`, which dejank keeps out of git. Each run compares with the last one; run once with `--baseline` to keep comparing with that run instead. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
 
 `dejank_meter` is a dev dependency: it never ships inside your app.
 
