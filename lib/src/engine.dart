@@ -42,15 +42,43 @@ class Finding {
   final String path;
   final int line, column;
   final String message;
+  final String impact;
 
   final List<Edit> edits;
 
-  Finding(this.rule, ResolvedUnitResult unit, int offset, this.message, [this.edits = const []])
-    : path = unit.path,
+  Finding(this.rule, ResolvedUnitResult unit, int offset, this.message, {this.edits = const [], String? impact})
+    : impact = impact ?? rule.impact,
+      path = unit.path,
       line = unit.lineInfo.getLocation(offset).lineNumber,
       column = unit.lineInfo.getLocation(offset).columnNumber;
 
   bool get autoFix => edits.isNotEmpty;
+}
+
+List<Finding> applicable(List<Finding> findings) {
+  final taken = <Edit>[];
+  final out = <Finding>[];
+  for (final f in [...findings]..sort((a, b) => a.edits.first.offset - b.edits.first.offset)) {
+    if (f.edits.any((e) => taken.any((t) => e.offset < t.offset + t.length && t.offset < e.offset + e.length))) {
+      continue;
+    }
+    taken.addAll(f.edits);
+    out.add(f);
+  }
+  return out;
+}
+
+final _ignore = RegExp(r'//\s*dejank:ignore\b(.*)');
+
+bool _ignored(List<String> lines, Finding f) {
+  for (final (i, sameLine) in [(f.line - 1, true), (f.line - 2, false)]) {
+    if (i < 0 || (!sameLine && !lines[i].trimLeft().startsWith('//'))) continue;
+    final m = _ignore.firstMatch(lines[i]);
+    if (m == null) continue;
+    final names = m[1]!.split(RegExp(r'[\s,]+')).where((s) => s.isNotEmpty);
+    if (names.isEmpty || names.contains(f.rule.name)) return true;
+  }
+  return false;
 }
 
 class Report {
@@ -79,8 +107,9 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
   }
   final project = Project(units);
   for (final unit in units) {
+    final lines = unit.content.split('\n');
     for (final rule in rules ?? allRules) {
-      report.findings.addAll(rule.check(unit, project));
+      report.findings.addAll(rule.check(unit, project).where((f) => !_ignored(lines, f)));
     }
   }
   await collection.dispose();

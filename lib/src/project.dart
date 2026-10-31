@@ -26,15 +26,35 @@ class Project {
 
 const listWidgets = {'ListView', 'GridView', 'SliverList', 'SliverGrid', 'SliverChildBuilderDelegate'};
 
+const _builderArgs = {'itemBuilder', 'separatorBuilder', 'builder', _positional};
+const _positional = '';
+
 bool inListItem(AstNode node, [Project? project]) {
-  for (var n = node.parent; n != null; n = n.parent) {
+  var repeated = false;
+  String? via;
+  for (AstNode? from = node, n = node.parent; n != null; from = n, n = n.parent) {
     if (_isCallback(n)) return false;
+    switch (n) {
+      case ForElement():
+        repeated = true;
+      case NamedArgument(:final name):
+        via = name.lexeme;
+      case ArgumentList(:final parent) when from is! NamedArgument:
+        via = _positional;
+        if (from is FunctionExpression && _repeats(parent)) repeated = true;
+    }
     final type = n is InstanceCreationExpression ? n.constructorName.type.element : null;
-    if (listWidgets.any((c) => isFlutterClass(type, c))) return true;
+    if (listWidgets.any((c) => isFlutterClass(type, c))) return repeated || _builderArgs.contains(via);
     if (project != null && project.listItems.contains(_declared(n))) return true;
   }
   return false;
 }
+
+bool _repeats(AstNode? call) => switch (call) {
+  MethodInvocation(:final methodName) => const {'map', 'expand', 'generate'}.contains(methodName.name),
+  InstanceCreationExpression(:final constructorName) => constructorName.name?.name == 'generate',
+  _ => false,
+};
 
 bool _isCallback(AstNode n) => n is NamedArgument && RegExp(r'^on[A-Z]').hasMatch(n.name.lexeme);
 

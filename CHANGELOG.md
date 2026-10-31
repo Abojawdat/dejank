@@ -1,3 +1,13 @@
+## 0.1.3
+
+- No more wrong warnings for one-off widgets in lists: only code that repeats (`itemBuilder:`, builder delegates, or `for` / `.map()` / `List.generate` in `children:`) counts as a list item. A search bar or an avatar in a fixed `children:` list is no longer flagged.
+- `intrinsic-in-list`: nested intrinsics are high impact; a single `IntrinsicHeight` is low with honest advice (keep it when the height depends on the content); `IntrinsicWidth` alone is not flagged (chat bubbles need it).
+- `image-cache-size`: suggestions compile when the width is nullable, and `BoxFit.cover` gets advice that fits it.
+- `serial-awaits-main`: low impact, warns that `.wait` wraps errors in `ParallelWaitError`, and indents multi-line calls properly.
+- `// dejank:ignore <rule>` on the line or the line above silences a finding.
+- `dejank scan` exits with code 1 only for high-impact findings.
+- `dejank fix` no longer counts overlapping fixes it could not apply, and re-formats changed files that were `dart format`-clean before.
+
 ## 0.1.2
 
 - `dejank scan` shows how many findings are high and medium impact.

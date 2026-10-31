@@ -32,11 +32,11 @@ class ScanCommand extends Command<void> {
     final report = await _analyze(name, argResults!.rest);
     final auto = report.findings.where((f) => f.autoFix).length;
     final suggest = report.findings.length - auto;
-    if (report.findings.isNotEmpty) exitCode = 1;
+    if (report.findings.any((f) => f.impact == 'high')) exitCode = 1;
     if (!_fancy) {
       for (final f in report.findings) {
         print(
-          '${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.rule.impact}  '
+          '${p.relative(f.path)}:${f.line}:${f.column}  ${f.rule.name}  ${f.impact}  '
           '${f.autoFix ? 'auto' : 'suggest'}',
         );
         print('  ${f.message.replaceAll('\n', '\n  ')}');
@@ -51,7 +51,7 @@ class ScanCommand extends Command<void> {
     for (final (i, f) in report.findings.indexed) {
       print('${_badge(i + 1)} ${_bold('${p.relative(f.path)}:${f.line}:${f.column}')}');
       print(
-        '    ${f.rule.impact == 'high' ? '🔴' : '🟡'} ${_cyan(f.rule.name)} ${_dim('·')} ${f.rule.impact} impact '
+        '    ${_impactIcon[f.impact]} ${_cyan(f.rule.name)} ${_dim('·')} ${f.impact} impact '
         '${_dim('·')} ${f.autoFix ? _green('🔧 auto-fix') : _amber('💡 suggestion')}',
       );
       print('    ${f.message.replaceAll('\n', '\n    ')}\n');
@@ -64,8 +64,10 @@ class ScanCommand extends Command<void> {
         ' 🔎 ${_bold(_count(report.findings.length, 'problem'))}   🔧 ${_green('$auto auto-fixable')}   '
         '💡 ${_amber('$suggest need a human')}',
       );
-      final high = report.findings.where((f) => f.rule.impact == 'high').length;
-      print(' 🔴 ${_bold('$high')} high impact   🟡 ${_bold('${report.findings.length - high}')} medium impact');
+      print(
+        ' ${[for (final MapEntry(key: impact, value: icon) in _impactIcon.entries)
+          if (report.findings.where((f) => f.impact == impact).length case final n when n > 0) '$icon ${_bold('$n')} $impact impact'].join('   ')}',
+      );
       if (auto > 0) print(' 👉 Run ${_cyan('dejank fix')} to fix ${auto == 1 ? 'it' : 'those $auto'} now.');
     }
     _credit();
@@ -91,6 +93,9 @@ class FixCommand extends Command<void> {
     for (final f in report.findings.where((f) => f.autoFix)) {
       byFile.putIfAbsent(f.path, () => []).add(f);
     }
+    final wanted = byFile.values.fold(0, (n, fs) => n + fs.length);
+    byFile.updateAll((_, findings) => applicable(findings));
+    final skipped = wanted - byFile.values.fold(0, (n, fs) => n + fs.length);
     final before = {for (final path in byFile.keys) path: File(path).readAsStringSync()};
     final after = {
       for (final MapEntry(key: path, value: findings) in byFile.entries)
@@ -105,7 +110,11 @@ class FixCommand extends Command<void> {
         stderr.writeln('Skipped ${p.relative(path)}: the fix would break it. This is a dejank bug, please report it.');
         continue;
       }
-      if (!dryRun) File(path).writeAsStringSync(after[path]!);
+      if (!dryRun) {
+        final formatted = _formatted(path);
+        File(path).writeAsStringSync(after[path]!);
+        if (formatted) Process.runSync('dart', ['format', path], runInShell: Platform.isWindows);
+      }
       fixed += findings.length;
       for (final f in findings) {
         rules[f.rule.name] = (rules[f.rule.name] ?? 0) + 1;
@@ -130,9 +139,10 @@ class FixCommand extends Command<void> {
     }
     final suggest = report.findings.where((f) => !f.autoFix).length;
     final summary = '${_count(fixed, 'problem')} in ${_count(files, 'file')}';
+    final again = skipped > 0 ? ' $skipped more overlap these changes: run dejank fix again.' : '';
     if (!_fancy) {
       print(
-        '${dryRun ? 'Would fix' : 'Fixed'} $summary.'
+        '${dryRun ? 'Would fix' : 'Fixed'} $summary.$again'
         '${suggest > 0 ? ' $suggest need a human, see `dejank scan`.' : ''}',
       );
       return;
@@ -145,6 +155,7 @@ class FixCommand extends Command<void> {
           ? ' ✨ ${_bold('Nothing to fix automatically.')}'
           : ' ✅ ${_bold('Fixed $summary.')}',
     );
+    if (again.isNotEmpty) print(' 🔁$again');
     if (rules.isNotEmpty) print('    ${rules.entries.map((e) => '${e.value}× ${_cyan(e.key)}').join(_dim(' · '))}');
     if (suggest > 0) print(' 💡 ${_amber('$suggest need a human:')} run ${_cyan('dejank scan')} to see them.');
     if (fixed > 0 && !dryRun) {
@@ -293,6 +304,17 @@ Future<Report> _analyze(String command, List<String> rest) async {
   }
   return report;
 }
+
+const _impactIcon = {'high': '🔴', 'medium': '🟡', 'low': '⚪'};
+
+bool _formatted(String path) =>
+    Process.runSync('dart', [
+      'format',
+      '--output=none',
+      '--set-exit-if-changed',
+      path,
+    ], runInShell: Platform.isWindows).exitCode ==
+    0;
 
 String _count(int n, String word) => '$n $word${n == 1 ? '' : 's'}';
 

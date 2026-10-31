@@ -10,7 +10,7 @@ class SerialAwaitsMain extends Rule {
   @override
   final name = 'serial-awaits-main';
   @override
-  final impact = 'medium';
+  final impact = 'low';
 
   @override
   List<Finding> check(ResolvedUnitResult unit, Project project) {
@@ -44,7 +44,7 @@ class SerialAwaitsMain extends Rule {
   }
 
   static String _message(ResolvedUnitResult unit, List<_Await> run) {
-    final calls = [for (final a in run) '    ${unit.content.substring(a.future.offset, a.future.end)},'];
+    final calls = [for (final a in run) '${_indent(unit.content.substring(a.future.offset, a.future.end), '    ')},'];
     final vars = [for (final a in run) a.variable ?? '_'];
     final keyword = run.every((a) => a.keyword == 'final' || a.variable == null) ? 'final' : 'var';
     final code = vars.every((v) => v == '_')
@@ -55,6 +55,19 @@ class SerialAwaitsMain extends Rule {
       'If none of them needs another, start them together:',
       ...code,
       'Keep any call that must finish first (like Firebase.initializeApp before other Firebase calls) above it.',
+      if (vars.any((v) => v != '_'))
+        'If one fails, .wait throws a ParallelWaitError (the original error is inside it), so a catch on a specific '
+            'exception type stops matching. Keep them separate if you catch errors here.',
+    ].join('\n');
+  }
+
+  static String _indent(String source, String pad) {
+    final lines = source.split('\n');
+    final rest = lines.skip(1).where((l) => l.trim().isNotEmpty);
+    final cut = rest.isEmpty ? 0 : rest.map((l) => l.length - l.trimLeft().length).reduce((a, b) => a < b ? a : b);
+    return [
+      pad + lines.first,
+      for (final l in lines.skip(1)) l.trim().isEmpty ? '' : pad + l.substring(cut),
     ].join('\n');
   }
 }

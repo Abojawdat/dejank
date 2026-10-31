@@ -23,11 +23,41 @@ class Screen extends StatelessWidget {
         ),
         Expanded(child: ListView(children: [for (final item in items) _row(item)])),
         Expanded(child: ListView.builder(itemCount: items.length, itemBuilder: _tearOff)),
+        Expanded(
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (_, i) => IntrinsicHeight( // LINT
+              child: Row(
+                children: [
+                  IntrinsicWidth(child: Text(items[i])), // LINT
+                  const Text('nested'),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // A chat bubble shrinks to its text: IntrinsicWidth alone is not flagged.
+        Expanded(
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (_, i) => IntrinsicWidth(child: Column(children: [Text(items[i])])),
+          ),
+        ),
+        // One search bar at the top of a page that scrolls: built once, not per item.
+        Expanded(
+          child: ListView(
+            children: [
+              const IntrinsicHeight(child: Row(children: [Text('search')])),
+              const SearchBox(),
+              for (final item in items) Text(item),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _row(String item) => IntrinsicWidth(child: Text(item)); // LINT
+  Widget _row(String item) => IntrinsicHeight(child: Text(item)); // LINT
 
   Widget _tearOff(BuildContext context, int i) => IntrinsicHeight(child: Text(items[i])); // LINT
 
@@ -53,7 +83,7 @@ class ItemTile extends StatelessWidget {
     );
   }
 
-  Widget _subtitle() => IntrinsicWidth(child: Text(title)); // LINT
+  Widget _subtitle() => IntrinsicHeight(child: Text(title)); // LINT
 
   void _open(BuildContext context) =>
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MoreDetails()));
@@ -64,7 +94,7 @@ class ItemBadge extends StatelessWidget {
   const ItemBadge({super.key});
 
   @override
-  Widget build(BuildContext context) => const IntrinsicWidth(child: Text('new')); // LINT
+  Widget build(BuildContext context) => const IntrinsicHeight(child: Text('new')); // LINT
 }
 
 class Details extends StatelessWidget {
@@ -79,4 +109,12 @@ class MoreDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const IntrinsicHeight(child: Text('more'));
+}
+
+/// Used once in a list's fixed children, so it is not a list item.
+class SearchBox extends StatelessWidget {
+  const SearchBox({super.key});
+
+  @override
+  Widget build(BuildContext context) => const IntrinsicHeight(child: Text('search'));
 }

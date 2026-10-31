@@ -80,7 +80,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
         node.offset,
         'Use MediaQuery.$replacement(context): rebuilds only when `$method` changes, '
         'not on every MediaQuery change (like each frame of the keyboard animation).',
-        [Edit(node.methodName.offset, read.end - node.methodName.offset, '$replacement$args')],
+        edits: [Edit(node.methodName.offset, read.end - node.methodName.offset, '$replacement$args')],
       ),
     );
   }

@@ -85,7 +85,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
         node.offset,
         'Use FadeTransition(opacity: ${animation.toSource()}, ...): this rebuilds and repaints on every '
         'animation frame; FadeTransition only changes the opacity of an existing layer.',
-        edits,
+        edits: edits,
       ),
     );
   }

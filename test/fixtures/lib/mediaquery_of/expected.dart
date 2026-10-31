@@ -28,6 +28,11 @@ class Sample extends StatelessWidget {
     final maybe = MediaQuery.maybeOf(context)?.size;
     final notFlutter = fake.MediaQuery.of(context).size;
     final theme = Theme.of(context).colorScheme;
+    // Silenced with an ignore comment, on the line or the line above.
+    final ignored = MediaQuery.of(context).size; // dejank:ignore mediaquery-of
+    // dejank:ignore
+    final ignoredAll = MediaQuery.of(context).padding;
+    final otherRule = MediaQuery.sizeOf(context); // dejank:ignore image-cache-size // LINT
 
     return Text(
       '$size $width $height $ratio $top $keyboard $scaler $dark $prefixed $both $multiline '
