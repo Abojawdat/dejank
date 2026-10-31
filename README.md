@@ -24,10 +24,10 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/banner.svg" width="760" alt="Terminal: dejank fix fixed 4 problems, then dejank measure shows widget builds down 93% and slow frames down 86%">
+  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/session.webp" width="760" alt="Terminal recording: dejank scan finds 7 problems, dejank fix fixes 4 of them, and dejank measure shows 93% fewer widget builds and 84% fewer slow frames">
 </p>
 
-<p align="center"><em>Real output: the demo shop app on an Android phone. <code>dejank fix</code> changed 4 lines.</em></p>
+<p align="center"><em>Real output, recorded on the demo shop app and an Android phone. <code>dejank fix</code> changed 4 lines.</em></p>
 
 ---
 
@@ -49,15 +49,7 @@ flutter pub get
 dejank scan
 ```
 
-```
-lib/product_tile.dart:11:21  mediaquery-of  high  auto
-  Use MediaQuery.widthOf(context): rebuilds only when `width` changes, not on every MediaQuery change (like each frame of the keyboard animation).
-lib/product_tile.dart:15:14  intrinsic-in-list  medium  suggest
-  IntrinsicHeight lays out its child twice (measure, then real) for every list item.
-  Use a fixed height instead: SizedBox(height: 72, child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, ...))
-
-7 problems: 4 auto-fixable (run `dejank fix`), 3 need a human.
-```
+<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/scan.png" width="760" alt="dejank scan output: 7 numbered findings, each with its rule, impact and whether it is an auto-fix or a suggestion">
 
 Then commit (git is your undo) and run:
 
@@ -66,14 +58,7 @@ dejank fix --dry-run   # see the diff, change nothing
 dejank fix
 ```
 
-```
-lib/product_tile.dart
-  @@ line 11
-  -     final compact = MediaQuery.of(context).size.width < 360;
-  +     final compact = MediaQuery.widthOf(context) < 360;
-
-Fixed 4 problems in 2 files. 3 need a human, see `dejank scan`.
-```
+<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/fix.png" width="760" alt="dejank fix output: the diff of the 4 fixes in 2 files">
 
 ## The rules
 
@@ -131,6 +116,8 @@ dejank fix
 dejank measure integration_test/search_test.dart -d <device>
 ```
 
+<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
+
 The numbers are saved in `.dejank/`, which dejank keeps out of git. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
 
 `dejank_meter` is a dev dependency: it never ships inside your app.
@@ -171,7 +158,7 @@ dejank fix    # يصلح المشاكل الآمنة ويعرض الفرق
 dejank measure integration_test/search_test.dart -d <device>   # الأرقام قبل وبعد
 ```
 
-في تطبيق المتجر التجريبي على هاتف Android: غيّر `dejank fix` أربعة أسطر فقط، فانخفض عدد مرات بناء الـ widgets بنسبة **٩٣٪** وانخفضت الإطارات البطيئة بنسبة **٨٦٪**.
+في تطبيق المتجر التجريبي على هاتف Android: غيّر `dejank fix` أربعة أسطر فقط، فانخفض عدد مرات بناء الـ widgets بنسبة **٩٣٪** وانخفضت الإطارات البطيئة بنسبة **٨٤٪**.
 
 </div>
 

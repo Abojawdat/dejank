@@ -1,0 +1,31 @@
+
+[1;38;5;16;48;5;208m ⚡ dejank [0m [1mfix[0m [38;5;245mlib[0m
+
+[1;38;5;16;48;5;208m 1 [0m [1mlib/home_screen.dart[0m
+  [38;5;245m  @@ line 26[0m
+  [38;5;203m  -         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),[0m
+  [38;5;78m  +         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),[0m
+  [38;5;245m  @@ line 77[0m
+  [38;5;203m  -     return AnimatedBuilder([0m
+  [38;5;203m  -       animation: _pulse,[0m
+  [38;5;203m  -       builder: (context, child) => Opacity(opacity: _pulse.value, child: child),[0m
+  [38;5;203m  -       child: Container([0m
+  [38;5;78m  +     return FadeTransition([0m
+  [38;5;78m  +       opacity: _pulse,[0m
+  [38;5;78m  +       child: Container([0m
+
+[1;38;5;16;48;5;208m 2 [0m [1mlib/product_tile.dart[0m
+  [38;5;245m  @@ line 11[0m
+  [38;5;203m  -     final compact = MediaQuery.of(context).size.width < 360;[0m
+  [38;5;78m  +     final compact = MediaQuery.widthOf(context) < 360;[0m
+  [38;5;245m  @@ line 19[0m
+  [38;5;203m  -             Image.network(product.imageUrl, width: 96, height: 96),[0m
+  [38;5;78m  +             Image.network(product.imageUrl, width: 96, cacheWidth: (96 * MediaQuery.devicePixelRatioOf(context)).round(), height: 96),[0m
+
+[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m
+ ✅ [1mFixed 4 problems in 2 files.[0m
+ 💡 [38;5;221m3 need a human:[0m run [38;5;81mdejank scan[0m to see them.
+ 📏 Prove it: [38;5;81mdejank measure <test file>[0m before and after.
+
+ [38;5;245mmade with[0m 💙 [38;5;245mby[0m [1mAbojawdat[0m [38;5;245m·[0m ⭐ [38;5;245mgithub.com/Abojawdat/dejank[0m
+

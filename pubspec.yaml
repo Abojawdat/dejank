@@ -6,8 +6,14 @@ issue_tracker: https://github.com/Abojawdat/dejank/issues
 topics: [performance, lints, codemod, analyzer, flutter]
 
 screenshots:
-  - description: dejank fix changed 4 lines in the demo shop app. On an Android phone, widget builds dropped 93% and slow frames 86%.
-    path: art/banner.png
+  - description: dejank scan, fix and measure on a demo shop app. On an Android phone, 93% fewer widget builds and 84% fewer slow frames.
+    path: art/session.webp
+  - description: dejank scan lists each slow spot with its impact and whether it can be fixed automatically.
+    path: art/scan.png
+  - description: dejank fix rewrites the safe ones and shows the diff.
+    path: art/fix.png
+  - description: dejank measure compares widget builds and frame times before and after.
+    path: art/measure.png
 
 environment:
   sdk: ^3.12.0

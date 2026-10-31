@@ -2,3 +2,5 @@ docs/
 test/
 example/slow_app/
 CLAUDE.md
+tool/
+site/

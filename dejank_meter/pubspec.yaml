@@ -6,8 +6,8 @@ issue_tracker: https://github.com/Abojawdat/dejank/issues
 topics: [performance, testing, flutter]
 
 screenshots:
-  - description: dejank fix changed 4 lines in the demo shop app. On an Android phone, widget builds dropped 93% and slow frames 86%.
-    path: art/banner.png
+  - description: dejank measure before and after dejank fix on an Android phone. 93% fewer widget builds, 84% fewer slow frames.
+    path: art/measure.png
 
 environment:
   sdk: ^3.12.0

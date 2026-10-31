@@ -1,0 +1,46 @@
+
+[1;38;5;16;48;5;208m ⚡ dejank [0m [1mscan[0m [38;5;245mlib[0m
+
+[1;38;5;16;48;5;208m 1 [0m [1mlib/home_screen.dart:26:42[0m
+    🔴 [38;5;81mmediaquery-of[0m [38;5;245m·[0m high impact [38;5;245m·[0m [38;5;78m🔧 auto-fix[0m
+    Use MediaQuery.paddingOf(context): rebuilds only when `padding` changes, not on every MediaQuery change (like each frame of the keyboard animation).
+
+[1;38;5;16;48;5;208m 2 [0m [1mlib/home_screen.dart:41:13[0m
+    🔴 [38;5;81mshrinkwrap-in-column[0m [38;5;245m·[0m high impact [38;5;245m·[0m [38;5;221m💡 suggestion[0m
+    shrinkWrap in a SingleChildScrollView builds every item at once: ListView.builder is no longer lazy.
+    If it scrolls together with other content: use CustomScrollView(slivers: [..., SliverList.builder(...)]),
+    with SliverToBoxAdapter for the other widgets, and remove shrinkWrap.
+
+[1;38;5;16;48;5;208m 3 [0m [1mlib/home_screen.dart:77:12[0m
+    🔴 [38;5;81mopacity-animation[0m [38;5;245m·[0m high impact [38;5;245m·[0m [38;5;78m🔧 auto-fix[0m
+    Use FadeTransition(opacity: _pulse, ...): this rebuilds and repaints on every animation frame; FadeTransition only changes the opacity of an existing layer.
+
+[1;38;5;16;48;5;208m 4 [0m [1mlib/main.dart:10:3[0m
+    🟡 [38;5;81mserial-awaits-main[0m [38;5;245m·[0m medium impact [38;5;245m·[0m [38;5;221m💡 suggestion[0m
+    2 awaits run one after another before runApp, so the first frame waits for each in turn.
+    If none of them needs another, start them together:
+      final (_, catalog) = await (
+        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+        rootBundle.loadString('assets/catalog.json'),
+      ).wait;
+    Keep any call that must finish first (like Firebase.initializeApp before other Firebase calls) above it.
+
+[1;38;5;16;48;5;208m 5 [0m [1mlib/product_tile.dart:11:21[0m
+    🔴 [38;5;81mmediaquery-of[0m [38;5;245m·[0m high impact [38;5;245m·[0m [38;5;78m🔧 auto-fix[0m
+    Use MediaQuery.widthOf(context): rebuilds only when `width` changes, not on every MediaQuery change (like each frame of the keyboard animation).
+
+[1;38;5;16;48;5;208m 6 [0m [1mlib/product_tile.dart:15:14[0m
+    🟡 [38;5;81mintrinsic-in-list[0m [38;5;245m·[0m medium impact [38;5;245m·[0m [38;5;221m💡 suggestion[0m
+    IntrinsicHeight lays out its child twice (measure, then real) for every list item.
+    Use a fixed height instead: SizedBox(height: 72, child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, ...))
+
+[1;38;5;16;48;5;208m 7 [0m [1mlib/product_tile.dart:19:13[0m
+    🔴 [38;5;81mimage-cache-size[0m [38;5;245m·[0m high impact [38;5;245m·[0m [38;5;78m🔧 auto-fix[0m
+    Add cacheWidth so the image is decoded at its display size, not full size, for every list item.
+
+[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;202m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;208m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;214m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;220m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;226m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;190m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;154m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;118m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;82m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m[38;5;46m━[0m
+ 🔎 [1m7 problems[0m   🔧 [38;5;78m4 auto-fixable[0m   💡 [38;5;221m3 need a human[0m
+ 👉 Run [38;5;81mdejank fix[0m to fix those 4 now.
+
+ [38;5;245mmade with[0m 💙 [38;5;245mby[0m [1mAbojawdat[0m [38;5;245m·[0m ⭐ [38;5;245mgithub.com/Abojawdat/dejank[0m
+

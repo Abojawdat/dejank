@@ -11,4 +11,4 @@ dejank fix
 dejank measure integration_test/search_test.dart -d <device>
 ```
 
-On an Android phone the second `measure` shows 93% fewer widget builds and 86% fewer slow frames.
+On an Android phone the second `measure` shows 93% fewer widget builds and 84% fewer slow frames.

@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/banner.svg" width="760" alt="dejank measure before and after: widget builds down 93%, slow frames down 86%">
+  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure before and after: widget builds down 93%, slow frames down 84%">
 </p>
 
 ---
