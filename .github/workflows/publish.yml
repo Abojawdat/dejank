@@ -1,0 +1,39 @@
+name: publish
+
+# v1.2.3 publishes dejank, dejank_meter-v1.2.3 publishes dejank_meter
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*', 'dejank_meter-v[0-9]+.[0-9]+.[0-9]+*']
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: package and version from tag
+        run: |
+          case "$GITHUB_REF_NAME" in
+            dejank_meter-v*) dir=dejank_meter ;;
+            v*) dir=. ;;
+            *) echo "::error::$GITHUB_REF_NAME is not a release tag"; exit 1 ;;
+          esac
+          version=$(grep '^version:' $dir/pubspec.yaml | awk '{print $2}')
+          [ "${GITHUB_REF_NAME#dejank_meter-}" = "v$version" ] || { echo "::error::tag $GITHUB_REF_NAME but $dir/pubspec.yaml says $version"; exit 1; }
+          echo "DIR=$dir" >> "$GITHUB_ENV"
+      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: dart pub get
+        working-directory: ${{ env.DIR }}
+      - run: if [ "$DIR" = . ]; then dart test; else flutter test; fi
+        working-directory: ${{ env.DIR }}
+      - run: dart pub publish --force
+        working-directory: ${{ env.DIR }}

@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - run: dart pub get
+        working-directory: dejank_meter
+      - run: dart pub publish --dry-run
+      - run: dart pub publish --dry-run
+        working-directory: dejank_meter
+      - run: dart format --output=none --set-exit-if-changed bin lib test/rules_test.dart test/measure_test.dart dejank_meter/lib dejank_meter/test
+      - run: dart analyze bin lib test/rules_test.dart test/measure_test.dart
+      - run: flutter analyze
+        working-directory: dejank_meter
+      - run: dart test
+      - run: flutter test
+        working-directory: dejank_meter
