@@ -1,0 +1,10 @@
+# Stand-in for flutter_bloc, so rules can be tested on its widgets.
+name: flutter_bloc
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter

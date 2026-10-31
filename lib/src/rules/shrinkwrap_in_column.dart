@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
+import 'package:analyzer/dart/element/element.dart';
 
 import '../engine.dart';
 import '../project.dart';
@@ -47,6 +48,8 @@ const _passThrough = {
   'ListenableBuilder',
   'AnimatedBuilder',
 };
+
+const _statePackages = {'flutter_bloc', 'provider', 'flutter_riverpod', 'hooks_riverpod', 'get', 'flutter_mobx'};
 
 const _smallCount = 20;
 
@@ -102,9 +105,10 @@ class _Visitor extends RecursiveAstVisitor<void> {
               for (final a in n.argumentList.arguments)
                 if (a is NamedArgument) a.name.lexeme: a.argumentExpression,
             };
-            return e!.name == 'Column' || _vertical(args) ? e.name : null;
+            if (e!.name == 'Column') return _unboundedParent(n) ?? 'Column';
+            return _vertical(args) ? e.name : null;
           }
-          if (!_passThrough.any((c) => isFlutterClass(e, c))) return null;
+          if (!_passesThrough(e)) return null;
         case NamedArgument() ||
             ArgumentList() ||
             ListLiteral() ||
@@ -116,7 +120,12 @@ class _Visitor extends RecursiveAstVisitor<void> {
             ExpressionFunctionBody() ||
             BlockFunctionBody() ||
             Block() ||
-            ReturnStatement():
+            ReturnStatement() ||
+            IfStatement() ||
+            SwitchStatement() ||
+            SwitchMember() ||
+            SwitchExpression() ||
+            SwitchExpressionCase():
           continue;
         default:
           return null;
@@ -124,6 +133,10 @@ class _Visitor extends RecursiveAstVisitor<void> {
     }
     return null;
   }
+
+  static bool _passesThrough(Element? e) =>
+      _passThrough.any((c) => isFlutterClass(e, c)) ||
+      (e is InterfaceElement && _statePackages.contains(e.library.uri.pathSegments.firstOrNull));
 
   static bool _vertical(Map<String, Expression> args) => switch (args['scrollDirection']) {
     null => true,

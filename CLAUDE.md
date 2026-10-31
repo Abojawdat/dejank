@@ -96,7 +96,8 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 1. ✅ Engine (`lib/src/engine.dart`), CLI `scan`/`fix` (`bin/dejank.dart`), rule `mediaquery-of`, fixture tests.
 2. ✅ Rules `opacity-animation`, `image-cache-size` (lists only, cacheWidth from real devicePixelRatio). `fix` now
    re-analyzes changed files in memory and refuses any fix that adds an analyzer error.
-3. ✅ Rules `shrinkwrap-in-column` (builder lists only, and only with no height limit), `intrinsic-in-list`,
+3. ✅ Rules `shrinkwrap-in-column` (builder lists only, and only with no height limit; walks through `if`/`switch`
+   and state-management builders like `BlocBuilder`), `intrinsic-in-list`,
    `serial-awaits-main`. Engine `lib/src/project.dart` finds tile widgets / helper methods used inside lists
    (and what they use), skipping `onTap:`-style callbacks, so list rules also see code outside the list.
 4. ✅ Demo app `example/slow_app` (200-product shop; all 6 rules fire, 4 auto-fixes; fixed copy analyzes clean).

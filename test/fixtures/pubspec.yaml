@@ -10,3 +10,5 @@ dependencies:
     sdk: flutter
   fake_sdks:
     path: fake_sdks
+  flutter_bloc:
+    path: fake_flutter_bloc

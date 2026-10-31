@@ -29,6 +29,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_bloc:
+    dependency: "direct main"
+    description:
+      path: fake_flutter_bloc
+      relative: true
+    source: path
+    version: "0.0.0"
   material_color_utilities:
     dependency: transitive
     description:
