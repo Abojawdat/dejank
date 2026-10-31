@@ -1,3 +1,8 @@
+## 0.1.2
+
+- `dejank scan` shows how many findings are high and medium impact.
+- `dejank fix` shows what it fixed per rule, and the last `dejank measure` numbers so you can measure again and see how much faster it is.
+
 ## 0.1.1
 
 - `shrinkwrap-in-column` now finds lists returned from `if` / `switch` and from state-management builders (`BlocBuilder`, Provider's `Consumer`, Riverpod, GetX, MobX), the usual BLoC screen shape. It no longer suggests `Expanded` for a `Column` inside a scroll view.

@@ -41,28 +41,28 @@ String table(String name, Run? before, Run now, {Set<String> own = const {}}) {
   }
 
   out.writeln('${name.padRight(28)}${before == null ? '' : 'before'.padLeft(10)}${'now'.padLeft(10)}');
-  row('widget builds', before?.total, now.total, _count);
+  row('widget builds', before?.total, now.total, thousands);
   int delta(String w) => ((now.builds[w] ?? 0) - (before?.builds[w] ?? 0)).abs();
   final all = {...now.builds.keys, ...?before?.builds.keys};
   final mine = all.where(own.contains);
   final widgets = (mine.isEmpty ? all : mine).where((w) => before == null || delta(w) > 0).toList()
     ..sort((a, b) => before == null ? now.builds[b]!.compareTo(now.builds[a]!) : delta(b).compareTo(delta(a)));
   for (final w in widgets.take(5)) {
-    row('  $w', before == null ? null : before.builds[w] ?? 0, now.builds[w] ?? 0, _count);
+    row('  $w', before == null ? null : before.builds[w] ?? 0, now.builds[w] ?? 0, thousands);
   }
 
   final frames = now.frames;
   if (frames != null) {
     final was = before?.frames;
-    row('frames', was?['count'], frames['count']!, _count);
+    row('frames', was?['count'], frames['count']!, thousands);
     row('  avg build', was?['buildMs'], frames['buildMs']!, _ms);
     row('  avg raster', was?['rasterMs'], frames['rasterMs']!, _ms);
-    row('  slow frames', was?['slow'], frames['slow']!, _count);
+    row('  slow frames', was?['slow'], frames['slow']!, thousands);
   }
   return out.toString();
 }
 
-String _count(num n) => n.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+String thousands(num n) => n.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 
 String _ms(num n) => '${n.toStringAsFixed(1)} ms';
 

@@ -64,6 +64,8 @@ class ScanCommand extends Command<void> {
         ' 🔎 ${_bold(_count(report.findings.length, 'problem'))}   🔧 ${_green('$auto auto-fixable')}   '
         '💡 ${_amber('$suggest need a human')}',
       );
+      final high = report.findings.where((f) => f.rule.impact == 'high').length;
+      print(' 🔴 ${_bold('$high')} high impact   🟡 ${_bold('${report.findings.length - high}')} medium impact');
       if (auto > 0) print(' 👉 Run ${_cyan('dejank fix')} to fix ${auto == 1 ? 'it' : 'those $auto'} now.');
     }
     _credit();
@@ -97,6 +99,7 @@ class FixCommand extends Command<void> {
     final broken = await wouldBreak(report, after);
     final dryRun = argResults!.flag('dry-run');
     var fixed = 0, files = 0;
+    final rules = <String, int>{};
     for (final MapEntry(key: path, value: findings) in byFile.entries) {
       if (broken.contains(path)) {
         stderr.writeln('Skipped ${p.relative(path)}: the fix would break it. This is a dejank bug, please report it.');
@@ -104,6 +107,9 @@ class FixCommand extends Command<void> {
       }
       if (!dryRun) File(path).writeAsStringSync(after[path]!);
       fixed += findings.length;
+      for (final f in findings) {
+        rules[f.rule.name] = (rules[f.rule.name] ?? 0) + 1;
+      }
       files++;
       final changes = diff(before[path]!, [for (final f in findings) ...f.edits]);
       if (!_fancy) {
@@ -139,8 +145,21 @@ class FixCommand extends Command<void> {
           ? ' ✨ ${_bold('Nothing to fix automatically.')}'
           : ' ✅ ${_bold('Fixed $summary.')}',
     );
+    if (rules.isNotEmpty) print('    ${rules.entries.map((e) => '${e.value}× ${_cyan(e.key)}').join(_dim(' · '))}');
     if (suggest > 0) print(' 💡 ${_amber('$suggest need a human:')} run ${_cyan('dejank scan')} to see them.');
-    if (fixed > 0 && !dryRun) print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after.');
+    if (fixed > 0 && !dryRun) {
+      final saved = Directory('.dejank').existsSync()
+          ? Directory('.dejank').listSync().whereType<File>().where((f) => f.path.endsWith('.json')).toList()
+          : <File>[];
+      if (saved.isEmpty) print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after.');
+      for (final f in saved) {
+        final run = Run.fromJson(jsonDecode(f.readAsStringSync()) as Map<String, dynamic>);
+        print(
+          ' 📏 Last measured: ${_bold(p.basenameWithoutExtension(f.path))} had ${_bold(thousands(run.total))} widget builds. '
+          'Run ${_cyan('dejank measure')} again to see how much faster it is now.',
+        );
+      }
+    }
     _credit();
   }
 }
