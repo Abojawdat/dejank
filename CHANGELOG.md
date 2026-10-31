@@ -8,7 +8,7 @@
 - With no path, `scan` and `fix` check `lib/`.
 - `dejank measure` keeps `.dejank/` out of git by itself.
 - "1 problem", not "1 problems".
-- pub.dev screenshot.
+- New README images, pub.dev screenshots, and a live demo page: https://abojawdat.github.io/dejank/
 
 ## 0.1.0
 

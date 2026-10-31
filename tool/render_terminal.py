@@ -1,4 +1,6 @@
+import io
 import re
+import subprocess
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -188,8 +190,42 @@ def animation(name):
     )
 
 
+def social(name):
+    w, h = 1280, 640
+    img = Image.new('RGB', (w, h), (7, 11, 20))
+    d = ImageDraw.Draw(img)
+    for y in range(h):
+        t = max(0.0, 1 - y / 420)
+        d.line([(0, y), (w, y)], fill=(int(7 + 19 * t), int(11 + 23 * t), int(20 + 36 * t)))
+    png = subprocess.run(['rsvg-convert', '-w', '220', str(ART / 'logo.svg')], capture_output=True, check=True).stdout
+    logo = Image.open(io.BytesIO(png)).convert('RGBA')
+    img.paste(logo, (90, 150), logo)
+    heavy = ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', 112, index=1)
+    body = ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', 40)
+    small = ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', 28)
+    d.text((360, 140), 'dejank', font=heavy, fill=TEXT)
+    d.text((364, 282), 'Find slow Flutter code. Fix it. Prove it.', font=body, fill=(148, 163, 184))
+    x = 364
+    for big, label in [('93%', 'fewer widget builds'), ('84%', 'fewer slow frames')]:
+        d.text((x, 360), big, font=ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', 64, index=1), fill=(34, 197, 94))
+        d.text((x, 436), label, font=small, fill=(148, 163, 184))
+        x += 360
+    gradient = [(234, 88, 12), (250, 204, 21), (34, 197, 94)]
+    for i in range(w - 180):
+        t = i / (w - 181) * 2
+        a, b = gradient[int(min(t, 1.999))], gradient[int(min(t, 1.999)) + 1]
+        f = t - int(min(t, 1.999))
+        d.line([(90 + i, 528), (90 + i, 533)], fill=tuple(int(a[k] + (b[k] - a[k]) * f) for k in range(3)))
+    d.text((90, 556), 'made with', font=small, fill=DIM)
+    d.text((90 + small.getlength('made with ') + 46, 556), 'by Abojawdat  ·  pub.dev/packages/dejank', font=small, fill=DIM)
+    heart = glyph('💙').resize((34, 34), Image.LANCZOS)
+    img.paste(heart, (int(90 + small.getlength('made with ') + 4), 556), heart)
+    img.save(ART / f'{name}.png', optimize=True)
+
+
 if __name__ == '__main__':
     ART.mkdir(exist_ok=True)
+    social('social')
     still('scan', 'dejank scan', 'scan')
     still('fix', 'dejank fix', 'fix')
     still('measure', MEASURE, 'measure_compare')

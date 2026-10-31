@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dejank — find slow Flutter code, fix it, prove it</title>
+<meta name="description" content="dejank finds slow Flutter code, fixes it for you, and proves it with before/after rebuild counts. Try it in your browser.">
+<meta property="og:title" content="dejank — find slow Flutter code, fix it, prove it">
+<meta property="og:description" content="4 lines changed: 93% fewer widget builds, 84% fewer slow frames. Try it in your browser.">
+<meta property="og:image" content="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/social.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #070B14;
+    --panel: #0B1220;
+    --line: #1E293B;
+    --text: #E2E8F0;
+    --soft: #94A3B8;
+    --dim: #64748B;
+    --orange: #F97316;
+    --green: #22C55E;
+    --cyan: #38BDF8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 50% -200px, #1a2238 0%, var(--bg) 60%) var(--bg);
+    color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  nav { display: flex; align-items: center; gap: 12px; padding: 18px 0; }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+  nav .brand img { width: 32px; height: 32px; }
+  nav .links { margin-left: auto; display: flex; gap: 18px; font-size: 14px; }
+  nav .links a { color: var(--soft); }
+  header { text-align: center; padding: 48px 0 24px; }
+  header img.logo { width: 96px; height: 96px; }
+  h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.1; margin: 16px 0 12px; letter-spacing: -0.02em; }
+  h1 .grad { background: linear-gradient(90deg, var(--orange), #FACC15 45%, var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--soft); font-size: 18px; max-width: 680px; margin: 0 auto; }
+  .install { display: inline-flex; align-items: center; gap: 12px; margin: 28px 0 8px; padding: 10px 10px 10px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; font: 15px var(--mono); max-width: 100%; }
+  .install code { overflow-x: auto; white-space: nowrap; }
+  .install code::before { content: "$ "; color: var(--dim); }
+  button { font: inherit; cursor: pointer; }
+  .copy { background: #1E293B; color: var(--text); border: 0; border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+  .copy:hover { background: #334155; }
+  .badges { margin-top: 12px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 40px 0 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; text-align: center; }
+  .stat b { display: block; font-size: 34px; line-height: 1.1; color: var(--green); }
+  .stat span { color: var(--soft); font-size: 14px; }
+  section { margin: 56px 0; }
+  h2 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .sub { color: var(--soft); margin: 0 0 20px; }
+  .term { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+  .term .bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .term .title { flex: 1; text-align: center; color: var(--dim); font-size: 13px; margin-right: 52px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .chip { background: #111A2E; color: var(--cyan); border: 1px solid #1E3A5F; border-radius: 999px; padding: 6px 14px; font: 13px var(--mono); }
+  .chip:hover:not(:disabled) { background: #16233D; }
+  .chip.play { color: #0B1220; background: linear-gradient(90deg, var(--orange), var(--green)); border: 0; font-weight: 700; }
+  .chip:disabled { opacity: .45; cursor: default; }
+  .screen { height: 540px; overflow-y: auto; padding: 16px 18px 8px; font: 13.5px/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; }
+  .screen .cmd { color: var(--cyan); font-weight: 700; }
+  .screen .ps { color: var(--dim); }
+  .screen .note { color: var(--soft); }
+  .prompt { display: flex; align-items: center; gap: 8px; padding: 10px 18px 16px; font: 13.5px var(--mono); }
+  .prompt span { color: var(--dim); }
+  .prompt input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--cyan); font: inherit; font-weight: 700; }
+  .caret { display: inline-block; width: .6em; height: 1.1em; background: var(--soft); vertical-align: -0.2em; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .hint { color: var(--dim); font-size: 13px; margin-top: 10px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card .n { display: inline-block; background: var(--orange); color: #0B1220; font-weight: 800; border-radius: 6px; padding: 0 8px; margin-right: 8px; }
+  .card h3 { margin: 0 0 6px; font: 700 17px var(--mono); }
+  .card p { margin: 0; color: var(--soft); font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  tr:last-child td { border-bottom: 0; }
+  td code { font: 14px var(--mono); color: var(--cyan); }
+  .pill { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .pill.auto { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill.suggest { background: rgba(250,204,21,.13); color: #FACC15; }
+  .more { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .more a { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; color: var(--text); }
+  .more a:hover { border-color: #334155; text-decoration: none; }
+  .more b { font-family: var(--mono); color: var(--cyan); }
+  .more span { display: block; color: var(--soft); font-size: 14px; margin-top: 4px; }
+  footer { border-top: 1px solid var(--line); margin-top: 64px; padding: 28px 0 40px; text-align: center; color: var(--soft); }
+  footer .gradbar { height: 3px; width: 220px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, #EA580C, #FACC15, #22C55E); }
+  footer b { color: var(--text); }
+  @media (max-width: 760px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .steps, .more { grid-template-columns: 1fr; }
+    .screen { height: 460px; font-size: 12px; }
+    nav .links a.hide-sm { display: none; }
+    th:nth-child(2), td:nth-child(2) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="./"><img src="logo.svg" alt="">dejank</a>
+    <div class="links">
+      <a href="#try">Try it</a>
+      <a class="hide-sm" href="#rules">Rules</a>
+      <a href="https://pub.dev/packages/dejank">pub.dev</a>
+      <a href="https://github.com/Abojawdat/dejank">GitHub</a>
+    </div>
+  </nav>
+
+  <header>
+    <img class="logo" src="logo.svg" alt="dejank logo: a janky frame-time line that turns smooth">
+    <h1>Find slow Flutter code.<br><span class="grad">Fix it. Prove it.</span></h1>
+    <p class="lead">dejank checks your Flutter app for the few performance mistakes that matter, rewrites the safe ones for you, and measures widget rebuilds and frame times before and after.</p>
+    <div class="install"><code id="install">dart pub global activate dejank</code><button class="copy" id="copy" type="button">Copy</button></div>
+    <div class="badges">
+      <a href="https://pub.dev/packages/dejank"><img alt="dejank on pub.dev" src="https://img.shields.io/pub/v/dejank.svg?label=dejank&color=22C55E&labelColor=0B1220"></a>
+      <a href="https://pub.dev/packages/dejank_meter"><img alt="dejank_meter on pub.dev" src="https://img.shields.io/pub/v/dejank_meter.svg?label=dejank_meter&color=22C55E&labelColor=0B1220"></a>
+      <a href="https://github.com/Abojawdat/dejank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/Abojawdat/dejank?style=flat&color=F97316&labelColor=0B1220"></a>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>93%</b><span>fewer widget builds</span></div>
+    <div class="stat"><b>84%</b><span>fewer slow frames</span></div>
+    <div class="stat"><b>67%</b><span>faster frame builds</span></div>
+    <div class="stat"><b style="color:var(--orange)">4</b><span>lines changed by dejank fix</span></div>
+  </div>
+  <p class="hint" style="text-align:center">Measured on the demo shop app on an Android phone: search, keyboard, scroll.</p>
+
+  <section id="try">
+    <h2>Try it in your browser</h2>
+    <p class="sub">You are in <code>example/slow_app</code>, a 200-product shop that triggers every rule. Click a command or type one. The output is the real output, recorded on that app and a real phone.</p>
+    <div class="term">
+      <div class="bar">
+        <span class="dot" style="background:#EF4444"></span><span class="dot" style="background:#F59E0B"></span><span class="dot" style="background:#22C55E"></span>
+        <span class="title">~/slow_app</span>
+      </div>
+      <div class="chips">
+        <button class="chip play" data-play type="button">▶ Play the whole story</button>
+        <button class="chip" data-cmd="dejank scan" type="button">dejank scan</button>
+        <button class="chip" data-cmd="dejank measure integration_test/search_test.dart -d BKQ" type="button">dejank measure</button>
+        <button class="chip" data-cmd="dejank fix" type="button">dejank fix</button>
+        <button class="chip" data-cmd="reset" type="button">reset</button>
+      </div>
+      <div class="screen" id="screen" aria-live="polite"></div>
+      <form class="prompt" id="form" autocomplete="off">
+        <span>$</span><input id="input" aria-label="Type a command" placeholder="type: dejank scan">
+      </form>
+    </div>
+    <p class="hint">Tip: measure first, then fix, then measure again to get the before/after table.</p>
+  </section>
+
+  <section>
+    <h2>Three commands</h2>
+    <p class="sub">Run them in any Flutter project after <code>flutter pub get</code>.</p>
+    <div class="steps">
+      <div class="card"><h3><span class="n">1</span>dejank scan</h3><p>Lists slow code with file and line, how much it hurts, and whether it can be fixed automatically. Exits with code 1, so it can guard CI.</p></div>
+      <div class="card"><h3><span class="n">2</span>dejank fix</h3><p>Rewrites the safe ones and shows the diff. Re-checks the fixed code first and skips any fix that would add an error. <code>--dry-run</code> to preview.</p></div>
+      <div class="card"><h3><span class="n">3</span>dejank measure</h3><p>Runs your integration test with <code>dejank_meter</code>, counts widget rebuilds and frame times, and compares them with the last run.</p></div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2>The rules</h2>
+    <p class="sub">Only performance, only rules that matter. A wrong warning is treated as a bug.</p>
+    <table>
+      <tr><th>Rule</th><th>What it finds</th><th>Fix</th></tr>
+      <tr><td><code>mediaquery-of</code></td><td><code>MediaQuery.of(context).size</code> rebuilds on every MediaQuery change, like each keyboard frame</td><td><span class="pill auto">auto</span></td></tr>
+      <tr><td><code>opacity-animation</code></td><td><code>AnimatedBuilder</code> + <code>Opacity</code> rebuilds and repaints every frame</td><td><span class="pill auto">auto</span></td></tr>
+      <tr><td><code>image-cache-size</code></td><td><code>Image.network</code> in a list decodes every image at full size</td><td><span class="pill auto">auto</span></td></tr>
+      <tr><td><code>shrinkwrap-in-column</code></td><td>A shrink-wrapped builder list in a <code>Column</code> builds every item at once</td><td><span class="pill suggest">suggest</span></td></tr>
+      <tr><td><code>intrinsic-in-list</code></td><td><code>IntrinsicHeight</code> lays out every list item twice</td><td><span class="pill suggest">suggest</span></td></tr>
+      <tr><td><code>serial-awaits-main</code></td><td>Independent <code>await</code>s before <code>runApp</code> delay the first frame</td><td><span class="pill suggest">suggest</span></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>More from Abojawdat</h2>
+    <div class="more">
+      <a href="https://pub.dev/packages/duo_dynamic_sizing"><b>duo_dynamic_sizing</b><span>Adaptive layout for the foldable iPhone Duo and any screen.</span></a>
+      <a href="https://pub.dev/packages/bank_card_3d"><b>bank_card_3d</b><span>Visa and Mastercard cards in real 3D, photoreal or glass.</span></a>
+      <a href="https://pub.dev/packages/iraqi_license_plate"><b>iraqi_license_plate</b><span>Photoreal Iraqi vehicle plates with the full data model.</span></a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="gradbar"></div>
+  made with 💙 by <b><a href="https://github.com/Abojawdat" style="color:inherit">Mohammad Othman (Abojawdat)</a></b> · ⭐ <a href="https://github.com/Abojawdat/dejank">github.com/Abojawdat/dejank</a>
+</footer>
+
+<script>
+  const screen = document.getElementById('screen');
+  const input = document.getElementById('input');
+  const buttons = [...document.querySelectorAll('.chip')];
+  const cache = {};
+  let fixed = false, measured = false, busy = false;
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  function xterm(n) {
+    if (n < 16) return ['#000', '#cd3131', '#0dbc79', '#e5e510', '#2472c8', '#bc3fbc', '#11a8cd', '#e5e5e5'][n % 8];
+    if (n < 232) {
+      n -= 16;
+      const l = [0, 95, 135, 175, 215, 255];
+      return `rgb(${l[Math.floor(n / 36)]},${l[Math.floor(n / 6) % 6]},${l[n % 6]})`;
+    }
+    const v = 8 + 10 * (n - 232);
+    return `rgb(${v},${v},${v})`;
+  }
+
+  function ansi(line) {
+    let out = '', fg = null, bg = null, bold = false, last = 0, m;
+    const re = /\x1b\[([0-9;]*)m/g;
+    const flush = (s) => {
+      if (!s) return;
+      const st = [];
+      if (fg) st.push('color:' + fg);
+      if (bg) st.push('background:' + bg + ';border-radius:3px');
+      if (bold) st.push('font-weight:700');
+      out += st.length ? `<span style="${st.join(';')}">${esc(s)}</span>` : esc(s);
+    };
+    while ((m = re.exec(line))) {
+      flush(line.slice(last, m.index));
+      const codes = (m[1] || '0').split(';').map(Number);
+      for (let i = 0; i < codes.length; i++) {
+        const c = codes[i];
+        if (c === 0) { fg = bg = null; bold = false; }
+        else if (c === 1) bold = true;
+        else if ((c === 38 || c === 48) && codes[i + 1] === 5) {
+          if (c === 38) fg = xterm(codes[i + 2]); else bg = xterm(codes[i + 2]);
+          i += 2;
+        }
+      }
+      last = re.lastIndex;
+    }
+    flush(line.slice(last));
+    return out;
+  }
+
+  function add(html, cls) {
+    const div = document.createElement('div');
+    if (cls) div.className = cls;
+    div.innerHTML = html || '&nbsp;';
+    screen.appendChild(div);
+    screen.scrollTop = screen.scrollHeight;
+    return div;
+  }
+
+  async function load(name) {
+    if (!cache[name]) cache[name] = (await (await fetch(`out/${name}.ans`)).text()).replace(/\r/g, '').replace(/\n+$/, '').split('\n');
+    return cache[name];
+  }
+
+  async function play(name) {
+    const lines = await load(name);
+    for (let i = 0; i < lines.length; i++) {
+      add(ansi(lines[i]));
+      if (lines[i].includes('Running the test')) {
+        const wait = add('<span class="note">   (the integration test runs on the phone…)</span>');
+        await sleep(1800);
+        wait.remove();
+      } else if (i % 2 === 1) await sleep(35);
+    }
+  }
+
+  async function type(command) {
+    const line = add('<span class="ps">$ </span><span class="cmd"></span><span class="caret"></span>');
+    const cmd = line.querySelector('.cmd');
+    for (let i = 1; i <= command.length; i++) {
+      cmd.textContent = command.slice(0, i);
+      await sleep(18 + Math.random() * 30);
+    }
+    await sleep(250);
+    line.querySelector('.caret').remove();
+  }
+
+  const note = (text) => add(`<span class="note">${text}</span>`);
+
+  async function run(raw, typed) {
+    const command = raw.trim().replace(/\s+/g, ' ');
+    if (!command) return;
+    if (typed) add(`<span class="ps">$ </span><span class="cmd">${esc(command)}</span>`);
+    else await type(command);
+    if (command === 'clear') { screen.innerHTML = ''; return; }
+    if (command === 'help' || command === 'dejank' || command === 'dejank --help') {
+      note('Commands you can try here:\n  dejank scan        list slow code\n  dejank fix         fix the safe ones\n  dejank measure     run the test and compare\n  reset              put the slow code back\n  clear              clear the screen');
+      return;
+    }
+    if (command === 'reset') {
+      fixed = measured = false;
+      note('Restored the slow demo app (git checkout lib). Measurements cleared.');
+      return;
+    }
+    if (/^dejank scan\b/.test(command)) return play(fixed ? 'scan_after' : 'scan');
+    if (/^dejank fix\b/.test(command)) {
+      await play(fixed ? 'fix_again' : 'fix');
+      fixed = true;
+      return;
+    }
+    if (/^dejank measure\b/.test(command)) {
+      if (!fixed) { await play('measure_first'); measured = true; return; }
+      if (measured) return play('measure_compare');
+      note('To get a before/after table, measure the slow app first:\n  reset → dejank measure → dejank fix → dejank measure');
+      return;
+    }
+    note(`command not found: ${esc(command)}\nTry: dejank scan, dejank fix, dejank measure, reset, help`);
+  }
+
+  async function guarded(fn) {
+    if (busy) return;
+    busy = true;
+    buttons.forEach((b) => (b.disabled = true));
+    try { await fn(); } catch (e) { note('Could not load the recording. Open this page from GitHub Pages, not from a file.'); }
+    busy = false;
+    buttons.forEach((b) => (b.disabled = false));
+    add('');
+  }
+
+  buttons.forEach((b) => b.addEventListener('click', () => guarded(async () => {
+    if (b.dataset.play !== undefined) {
+      screen.innerHTML = '';
+      fixed = measured = false;
+      for (const c of ['dejank scan', 'dejank measure integration_test/search_test.dart -d BKQ', 'dejank fix', 'dejank measure integration_test/search_test.dart -d BKQ']) {
+        await run(c);
+        add('');
+        await sleep(900);
+      }
+    } else {
+      await run(b.dataset.cmd);
+    }
+  })));
+
+  document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = input.value;
+    input.value = '';
+    guarded(() => run(value, true));
+  });
+
+  document.getElementById('copy').addEventListener('click', async (e) => {
+    try {
+      await navigator.clipboard.writeText(document.getElementById('install').textContent);
+      e.target.textContent = 'Copied ✓';
+    } catch (_) {
+      e.target.textContent = 'Select & copy';
+    }
+    setTimeout(() => (e.target.textContent = 'Copy'), 1500);
+  });
+
+  note('Welcome! This terminal replays real dejank output from the demo app.\nClick "▶ Play the whole story", or type a command below (try: help).');
+  add('');
+</script>
+</body>
+</html>

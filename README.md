@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/icon.svg" width="140" alt="dejank icon — a janky frame-time line that turns smooth">
+  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/logo.svg" width="140" alt="dejank icon — a janky frame-time line that turns smooth">
 </p>
 
 <h1 align="center">dejank</h1>
@@ -17,6 +17,7 @@
 <p align="center">
   <a href="https://pub.dev/packages/dejank"><img alt="dejank on pub" src="https://img.shields.io/pub/v/dejank.svg?label=dejank"></a>
   <a href="https://pub.dev/packages/dejank_meter"><img alt="dejank_meter on pub" src="https://img.shields.io/pub/v/dejank_meter.svg?label=dejank_meter"></a>
+  <a href="https://abojawdat.github.io/dejank/"><img alt="live demo" src="https://img.shields.io/badge/live%20demo-try%20it%20in%20the%20browser-F97316"></a>
   <a href="https://github.com/Abojawdat/dejank/actions/workflows/ci.yml"><img alt="tests" src="https://img.shields.io/github/actions/workflow/status/Abojawdat/dejank/ci.yml?branch=main&label=tests"></a>
   <img alt="performance only" src="https://img.shields.io/badge/rules-performance%20only-22C55E">
   <a href="LICENSE"><img alt="PolyForm Shield 1.0.0" src="https://img.shields.io/badge/licence-PolyForm%20Shield-blue"></a>
@@ -28,6 +29,10 @@
 </p>
 
 <p align="center"><em>Real output, recorded on the demo shop app and an Android phone. <code>dejank fix</code> changed 4 lines.</em></p>
+
+<p align="center">
+  <a href="https://abojawdat.github.io/dejank/"><strong>▶ Try the live demo</strong></a>: run <code>dejank scan</code>, <code>fix</code> and <code>measure</code> in your browser
+</p>
 
 ---
 

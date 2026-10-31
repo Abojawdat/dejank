@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/icon.svg" width="110" alt="dejank icon — a janky frame-time line that turns smooth">
+  <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/logo.svg" width="110" alt="dejank icon — a janky frame-time line that turns smooth">
 </p>
 
 <h1 align="center">dejank_meter</h1>

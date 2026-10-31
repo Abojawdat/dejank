@@ -99,13 +99,38 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 3. ✅ Rules `shrinkwrap-in-column` (builder lists only, and only with no height limit; walks through `if`/`switch`
    and state-management builders like `BlocBuilder`), `intrinsic-in-list`,
    `serial-awaits-main`. Engine `lib/src/project.dart` finds tile widgets / helper methods used inside lists
-   (and what they use), skipping `onTap:`-style callbacks, so list rules also see code outside the list.
+   (and what they use), skipping `onTap:`-style callbacks, so list rules also see code outside the list. Only
+   `build` and `@override` methods make a list widget's code list code; helpers count only when called from them.
 4. ✅ Demo app `example/slow_app` (200-product shop; all 6 rules fire, 4 auto-fixes; fixed copy analyzes clean).
 5. ✅ `dejank_meter` + `dejank measure`. Proof on a real Android phone (2026-10-31), demo search test, before → after
    `dejank fix` (4 auto-fixes only): widget builds 213,677 → 14,051 (-93%), ProductTile 4,620 → 240 (-95%),
    avg build 22.9 → 7.7 ms (-66%), slow frames 43 → 6 of ~140 (-86%). Debug mode (the build hook needs it), so
-   frame times are relative; build counts are exact.
+   frame times are relative; build counts are exact. Second run with the pretty CLI (same day, the one in all
+   images): 214,669 → 15,219 (-93%), slow frames 44 → 7 (-84%), avg build 27.1 → 8.9 ms (-67%).
 6. Live rebuild overlay.
+
+Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1 is ready in CHANGELOG.
+
+## Look and launch
+
+- CLI output is pretty in a terminal (colors, numbered findings, emojis, gradient bar, "made with 💙 by Abojawdat")
+  and plain when piped. `NO_COLOR` / `FORCE_COLOR` respected. Plain output must stay stable (CI logs, tests).
+- `site/` is the live demo on GitHub Pages (`demo.yml`): a browser terminal that replays the real recordings in
+  `site/out/*.ans`. Re-record them with `FORCE_COLOR=1 dejank ... > site/out/<name>.ans` in `example/slow_app`.
+- `tool/render_terminal.py` (Pillow, macOS fonts) turns those recordings into `art/scan.png`, `fix.png`,
+  `measure.png`, the animated `session.webp` (README hero, pub.dev screenshot) and `social.png` (GitHub preview).
+- pub.dev loads README images through its own cache; a URL it once saw as 404 stays broken for a while, so new
+  images get new file names.
+
+## Backlog (from a review on a real BLoC app, 2026-10-31)
+
+- Ignore comment `// dejank:ignore <rule>`; tag findings in code nothing uses as "unused, delete it".
+- Finer impact (a helper method is not `build`); `--format json` / SARIF for GitHub annotations.
+- measure: slow-frame budget from the real refresh rate (120 Hz = 8.3 ms), not fixed 60 Hz; try profile mode with
+  timeline build events for real frame times.
+- Rules: `FutureBuilder(future: load())` refetches every rebuild; `ListView(children: items.map(...).toList())`
+  (auto → builder); images sized by a parent / `DecorationImage(NetworkImage)` / `CachedNetworkImage` without
+  `memCacheWidth`; `AnimatedBuilder` with unused `child`; `final mq = MediaQuery.of(context)` with only field reads.
 
 ## How the code works
 
