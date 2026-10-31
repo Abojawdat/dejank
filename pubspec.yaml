@@ -5,6 +5,10 @@ repository: https://github.com/Abojawdat/dejank
 issue_tracker: https://github.com/Abojawdat/dejank/issues
 topics: [performance, lints, codemod, analyzer, flutter]
 
+screenshots:
+  - description: dejank fix changed 4 lines in the demo shop app. On an Android phone, widget builds dropped 93% and slow frames 86%.
+    path: art/banner.png
+
 environment:
   sdk: ^3.12.0
 
