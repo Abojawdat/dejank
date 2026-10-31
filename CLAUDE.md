@@ -88,6 +88,8 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 3. **`dejank measure`:** both. First the integration test + JSON before/after diff (exact proof), then a live
    rebuild overlay on top using the same counter.
 4. **Demo app:** small fake shop app in `example/slow_app` that triggers every rule.
+5. **Licence (2026-10-31): PolyForm Shield 1.0.0**, not MIT/AGPL. Goal: stop renamed copies (free or paid). Free to use
+   anywhere; not OSI, so a few fewer pub points. Not for selling.
 
 ## Build phases
 
@@ -112,3 +114,6 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
   type-checked against real Flutter). `input.dart` lines ending in `// LINT` must be flagged, all others must not;
   `expected.dart` is the result after fixing.
 - Run: `dart run bin/dejank.dart scan <path>` / `fix <path>`. The target project needs `flutter pub get` first.
+- Release: bump `version:` in `pubspec.yaml` or `dejank_meter/pubspec.yaml` + CHANGELOG, push to main. `release.yml`
+  tags it (`v1.2.3` / `dejank_meter-v1.2.3`) and starts `publish.yml` (GitHub environment `pub.dev`). The root
+  `.pubignore` also applies to `dejank_meter/`, so never list `dejank_meter/` in it.
