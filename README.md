@@ -44,7 +44,18 @@
 - **No noise.** Only performance, only rules that matter. A wrong warning is treated as a bug.
 - **Safe fixes.** dejank reads your code the way the compiler does, so it only touches Flutter's real classes. Before writing a single file it re-checks the fixed code and skips any fix that would add an error.
 
+## Two packages
+
+| Package | What it is | Install |
+|---|---|---|
+| [**dejank**](https://pub.dev/packages/dejank) | The tool: `scan`, `fix` and `measure`. Runs on your computer. | `dart pub global activate dejank` |
+| [**dejank_meter**](https://pub.dev/packages/dejank_meter) | Counts widget rebuilds and frame times inside your app's tests, for `dejank measure`. A dev dependency: it never ships in your app. | `flutter pub add dev:dejank_meter` |
+
+`scan` and `fix` need only `dejank`. Add `dejank_meter` to an app when you want the before/after numbers.
+
 ## Quick start
+
+**1. Find slow code**
 
 ```sh
 dart pub global activate dejank
@@ -56,7 +67,7 @@ dejank scan
 
 <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/scan.png" width="760" alt="dejank scan output: 7 numbered findings, each with its rule, impact and whether it is an auto-fix or a suggestion">
 
-Then commit (git is your undo) and run:
+**2. Fix it.** Commit first (git is your undo), then:
 
 ```sh
 dejank fix --dry-run   # see the diff, change nothing
@@ -64,6 +75,13 @@ dejank fix
 ```
 
 <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/fix.png" width="760" alt="dejank fix output: the diff of the 4 fixes in 2 files">
+
+**3. Prove it.** Add the meter to your app and run your test before and after (see [Prove it](#prove-it-dejank-measure)):
+
+```sh
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
+dejank measure integration_test/my_test.dart -d <device>
+```
 
 ## The rules
 
@@ -101,7 +119,7 @@ Adding `const` isn't here on purpose: turn on the official `prefer_const_constru
 
 ## Prove it: `dejank measure`
 
-Add the meter to your app's dev dependencies:
+Add [`dejank_meter`](https://pub.dev/packages/dejank_meter) to your app's dev dependencies:
 
 ```sh
 flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
@@ -175,6 +193,7 @@ dart pub global activate dejank
 cd my_app && flutter pub get
 dejank scan   # يعرض المشاكل مع الملف والسطر
 dejank fix    # يصلح المشاكل الآمنة ويعرض الفرق
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'   # داخل تطبيقك، فقط لأجل measure
 dejank measure integration_test/search_test.dart -d <device>   # الأرقام قبل وبعد
 ```
 

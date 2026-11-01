@@ -190,7 +190,9 @@ class FixCommand extends Command<void> {
           if (f.path.endsWith('.baseline.json') || !saved.containsKey(slug)) saved[slug] = f;
         }
       }
-      if (saved.isEmpty) print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after.');
+      if (saved.isEmpty) {
+        print(' 📏 Prove it: ${_cyan('dejank measure <test file>')} before and after (with the dejank_meter package).');
+      }
       for (final MapEntry(key: slug, value: f) in saved.entries) {
         final run = Run.fromJson(jsonDecode(f.readAsStringSync()) as Map<String, dynamic>);
         print(
@@ -207,7 +209,9 @@ class MeasureCommand extends Command<void> {
   @override
   final name = 'measure';
   @override
-  final description = 'Run a test that uses dejank_meter, save its numbers, and compare them with the last run.';
+  final description =
+      'Run a test that uses dejank_meter, save its numbers, and compare them with the last run.\n'
+      'Add the meter to your app first: flutter pub add dev:dejank_meter \'dev:integration_test:{"sdk":"flutter"}\'';
   @override
   String get invocation => 'dejank measure <test file> [-d device]';
 
@@ -257,7 +261,11 @@ class MeasureCommand extends Command<void> {
     }
     final runs = parseRuns(LineSplitter.split('${result.stdout}'));
     if (runs.isEmpty) {
-      stderr.writeln("No numbers found. Wrap the steps in measure('name', () async { ... }) from dejank_meter.");
+      stderr
+        ..writeln("No numbers found. Wrap the steps in measure('name', () async { ... }) from dejank_meter.")
+        ..writeln(
+          'Add it to your app with: flutter pub add dev:dejank_meter \'dev:integration_test:{"sdk":"flutter"}\'',
+        );
       exitCode = 1;
       return;
     }

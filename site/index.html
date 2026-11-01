@@ -43,7 +43,9 @@
   h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.1; margin: 16px 0 12px; letter-spacing: -0.02em; }
   h1 .grad { background: linear-gradient(90deg, var(--orange), #FACC15 45%, var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .lead { color: var(--soft); font-size: 18px; max-width: 680px; margin: 0 auto; }
-  .install { display: inline-flex; align-items: center; gap: 12px; margin: 28px 0 8px; padding: 10px 10px 10px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; font: 15px var(--mono); max-width: 100%; }
+  .installs { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 28px 0 8px; }
+  .install .what { color: var(--dim); font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; white-space: nowrap; }
+  .install { display: inline-flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; font: 15px var(--mono); max-width: 100%; }
   .install code { overflow-x: auto; white-space: nowrap; }
   .install code::before { content: "$ "; color: var(--dim); }
   button { font: inherit; cursor: pointer; }
@@ -114,6 +116,7 @@
       <a href="#try">Try it</a>
       <a class="hide-sm" href="#rules">Rules</a>
       <a href="https://pub.dev/packages/dejank">pub.dev</a>
+      <a class="hide-sm" href="https://pub.dev/packages/dejank_meter">dejank_meter</a>
       <a href="https://github.com/Abojawdat/dejank">GitHub</a>
     </div>
   </nav>
@@ -122,7 +125,10 @@
     <img class="logo" src="logo.svg" alt="dejank logo: a janky frame-time line that turns smooth">
     <h1>Find slow Flutter code.<br><span class="grad">Fix it. Prove it.</span></h1>
     <p class="lead">dejank checks your Flutter app for the few performance mistakes that matter, rewrites the safe ones for you, and measures widget rebuilds and frame times before and after.</p>
-    <div class="install"><code id="install">dart pub global activate dejank</code><button class="copy" id="copy" type="button">Copy</button></div>
+    <div class="installs">
+      <div class="install"><span class="what">the tool</span><code>dart pub global activate dejank</code><button class="copy" type="button">Copy</button></div>
+      <div class="install"><span class="what">in your app, for measure</span><code>flutter pub add dev:dejank_meter 'dev:integration_test:{&quot;sdk&quot;:&quot;flutter&quot;}'</code><button class="copy" type="button">Copy</button></div>
+    </div>
     <div class="badges">
       <a href="https://pub.dev/packages/dejank"><img alt="dejank on pub.dev" src="https://img.shields.io/pub/v/dejank.svg?label=dejank&color=22C55E&labelColor=0B1220"></a>
       <a href="https://pub.dev/packages/dejank_meter"><img alt="dejank_meter on pub.dev" src="https://img.shields.io/pub/v/dejank_meter.svg?label=dejank_meter&color=22C55E&labelColor=0B1220"></a>
@@ -167,7 +173,7 @@
     <div class="steps">
       <div class="card"><h3><span class="n">1</span>dejank scan</h3><p>Lists slow code with file and line, how much it hurts, and whether it can be fixed automatically. Exits with code 1, so it can guard CI.</p></div>
       <div class="card"><h3><span class="n">2</span>dejank fix</h3><p>Rewrites the safe ones and shows the diff. Re-checks the fixed code first and skips any fix that would add an error. <code>--dry-run</code> to preview.</p></div>
-      <div class="card"><h3><span class="n">3</span>dejank measure</h3><p>Runs your integration test with <code>dejank_meter</code>, counts widget rebuilds and frame times, and compares them with the last run.</p></div>
+      <div class="card"><h3><span class="n">3</span>dejank measure</h3><p>Runs your integration test with <a href="https://pub.dev/packages/dejank_meter"><code>dejank_meter</code></a> (add it as a dev dependency), counts widget rebuilds and frame times, and compares them with the last run.</p></div>
     </div>
   </section>
 
@@ -350,15 +356,15 @@
     guarded(() => run(value, true));
   });
 
-  document.getElementById('copy').addEventListener('click', async (e) => {
+  document.querySelectorAll('.install .copy').forEach((button) => button.addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText(document.getElementById('install').textContent);
-      e.target.textContent = 'Copied ✓';
+      await navigator.clipboard.writeText(button.previousElementSibling.textContent);
+      button.textContent = 'Copied ✓';
     } catch (_) {
-      e.target.textContent = 'Select & copy';
+      button.textContent = 'Select & copy';
     }
-    setTimeout(() => (e.target.textContent = 'Copy'), 1500);
-  });
+    setTimeout(() => (button.textContent = 'Copy'), 1500);
+  }));
 
   note('Welcome! This terminal replays real dejank output from the demo app.\nClick "▶ Play the whole story", or type a command below (try: help).');
   add('');

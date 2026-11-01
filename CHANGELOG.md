@@ -1,3 +1,7 @@
+## 0.1.4
+
+- README, demo page and `dejank measure --help` now say where `dejank_meter` comes from and how to add it.
+
 ## 0.1.3
 
 - **Heat map:** dejank now knows how often code runs (every frame, every list item, every keystroke, every build, events, startup, rare) by following calls, tear-offs and widget creation across files. Findings show the path, like `TripList.build → itemBuilder → TripTile.build → TripTile._price`.

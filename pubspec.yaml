@@ -1,6 +1,6 @@
 name: dejank
 description: Finds slow Flutter code, fixes it for you, and proves it with before/after numbers.
-version: 0.1.3
+version: 0.1.4
 homepage: https://abojawdat.github.io/dejank/
 repository: https://github.com/Abojawdat/dejank
 issue_tracker: https://github.com/Abojawdat/dejank/issues
