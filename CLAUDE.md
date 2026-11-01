@@ -113,7 +113,7 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    `builder-child`, `eager-list`; read/write rules `bloc-select` and stored `MediaQuery`. Every rule was checked by
    hand on 5 real apps, and `fix` was run on copies of them (0 new analyzer issues). Next: deep measure.
 
-Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1 is ready in CHANGELOG.
+Published: `dejank` 0.1.3 on pub.dev (2026-11-01, by the GitHub Actions release flow; 0.1.2 was never published). `dejank_meter` not yet: needs one manual `dart pub publish`, then automated publishing with tag pattern `dejank_meter-v{{version}}`.
 
 ## Look and launch
 
