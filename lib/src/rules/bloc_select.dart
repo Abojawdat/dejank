@@ -142,7 +142,9 @@ class _Visitor extends RecursiveAstVisitor<void> {
       chain = parent;
     }
     if (names.isEmpty || (names.length == 1 && names.single == 'state') || chain.parent is MethodInvocation) return;
-    final target = unit.content.substring(node.target!.offset, node.target!.end);
+    final receiver = node.target;
+    if (receiver == null) return;
+    final target = unit.content.substring(receiver.offset, receiver.end);
     final watched = typeArgs.single.toSource();
     final select = '$target.select(($watched it) => it.${names.join('.')})';
     findings.add(

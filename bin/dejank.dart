@@ -493,6 +493,9 @@ Future<Report> _analyze(String command, List<String> rest) async {
   }
   if (_fancy) _header(command, path);
   final report = await analyze(path);
+  for (final crash in report.crashes) {
+    stderr.writeln('Warning: $crash. The other rules still ran. This is a dejank bug, please report it.');
+  }
   if (report.unresolved.isNotEmpty) {
     stderr.writeln(
       'Warning: ${report.unresolved.length} files have imports that could not be found. '

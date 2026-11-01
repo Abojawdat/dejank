@@ -1,3 +1,8 @@
+## 0.2.1
+
+- Fixed a crash in `bloc-select` when `watch` is called inside an extension on `BuildContext`.
+- If a rule ever fails on a file, dejank now warns and keeps going with the other rules instead of stopping.
+
 ## 0.2.0
 
 - **`dejank measure` needs no test anymore.** Run `dejank measure -d <phone>`: your app opens with the meter on, you use it, press Enter, and dejank shows what rebuilt and how many frames were slow. Run it again after a change for the before/after table. `--flavor` and `--target` for apps that need them. The scripted test mode is still there for exact numbers in CI.

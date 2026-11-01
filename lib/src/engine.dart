@@ -101,6 +101,8 @@ class Report {
   final unresolved = <String>[];
 
   final errors = <String, int>{};
+
+  final crashes = <String>[];
 }
 
 Future<Report> analyze(String path, [List<Rule>? rules]) async {
@@ -123,7 +125,11 @@ Future<Report> analyze(String path, [List<Rule>? rules]) async {
   for (final unit in units) {
     final lines = unit.content.split('\n');
     for (final rule in rules ?? allRules) {
-      report.findings.addAll(rule.check(unit, project).where((f) => !_ignored(lines, f)));
+      try {
+        report.findings.addAll(rule.check(unit, project).where((f) => !_ignored(lines, f)));
+      } catch (e) {
+        report.crashes.add('${rule.name} failed on ${p.relative(unit.path)}: $e');
+      }
     }
   }
   await collection.dispose();

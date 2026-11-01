@@ -59,3 +59,8 @@ class Wallet extends StatelessWidget {
     );
   }
 }
+
+// Inside an extension on BuildContext, watch has no `context.` in front of it.
+extension WalletRead on BuildContext {
+  double get balance => watch<WalletCubit>().state.balance;
+}
