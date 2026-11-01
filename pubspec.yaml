@@ -1,6 +1,6 @@
 name: dejank
-description: Finds and fixes slow Flutter code. Install both: dart pub global activate dejank (the tool) and flutter pub add dev:dejank_meter (in your app, for before/after numbers).
-version: 0.1.8
+description: "Finds and fixes slow Flutter code. Install both: dart pub global activate dejank (the tool) and flutter pub add dev:dejank_meter (in your app, for before/after numbers)."
+version: 0.1.9
 homepage: https://abojawdat.github.io/dejank/
 repository: https://github.com/Abojawdat/dejank
 issue_tracker: https://github.com/Abojawdat/dejank/issues

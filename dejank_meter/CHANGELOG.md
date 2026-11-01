@@ -1,4 +1,4 @@
-## 0.1.3
+## 0.1.4
 
 - Says at the top and in the description to install both packages: dejank with Dart, dejank_meter with Flutter.
 
