@@ -1,6 +1,6 @@
 name: dejank_meter
-description: Counts widget builds and frame times while a test runs, so `dejank measure` can compare runs.
-version: 0.1.0
+description: The measuring half of dejank. Add it as a dev dependency; it counts widget rebuilds and frame times in your tests so dejank measure can show before/after numbers.
+version: 0.1.1
 homepage: https://abojawdat.github.io/dejank/
 repository: https://github.com/Abojawdat/dejank/tree/main/dejank_meter
 issue_tracker: https://github.com/Abojawdat/dejank/issues

@@ -1,3 +1,7 @@
+## 0.1.5
+
+- The README and the Example tab start with how dejank works: two packages (dejank finds and fixes, dejank_meter measures) and the four steps from install to before/after numbers.
+
 ## 0.1.4
 
 - README, demo page and `dejank measure --help` now say where `dejank_meter` comes from and how to add it.

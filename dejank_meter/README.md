@@ -26,14 +26,28 @@
 
 ---
 
-## Use
+## How it fits with dejank
+
+dejank is **two packages** that work together. This one is the speed sensor:
+
+| | [**dejank**](https://pub.dev/packages/dejank): the mechanic | **dejank_meter** (this package): the speed sensor |
+|---|---|---|
+| What it does | Finds slow code and fixes it | Measures how much faster the app got |
+| Where it lives | On your computer (a command-line tool) | Inside your app, only in tests. It never ships to users |
+| Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
+
+You only need this package for `dejank measure`, the "prove it" step. `dejank scan` and `dejank fix` work without it.
+
+## How to use it
+
+**1.** Install the tool on your computer, and add the meter to your app (test-only):
 
 ```sh
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
 dart pub global activate dejank
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
 ```
 
-Wrap the steps you care about in `measure`:
+**2.** In an integration test, wrap the steps you care about (open a screen, type, scroll) in `measure(...)`:
 
 ```dart
 import 'package:dejank_meter/dejank_meter.dart';
@@ -54,11 +68,17 @@ void main() {
 }
 ```
 
+**3.** Measure before the fix, fix, then measure again:
+
 ```sh
-dejank measure integration_test/search_test.dart -d <device>
+dejank measure integration_test/search_test.dart -d <phone>
+dejank fix
+dejank measure integration_test/search_test.dart -d <phone>
 ```
 
-The first run saves the numbers. Change your code (for example with `dejank fix`) and run again to get the before/now table.
+The second run prints the before/after table (the picture at the top).
+
+**Behind the scenes:** `dejank measure` runs your test, this package counts rebuilds and frame times inside the app while it runs, and `dejank` reads those counts and shows the table.
 
 ## What it counts
 

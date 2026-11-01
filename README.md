@@ -36,52 +36,103 @@
 
 ---
 
-## What you get
+## How it works
 
-- **`dejank scan`** lists slow code with `file:line`, how much it hurts, and whether it can be fixed automatically.
-- **`dejank fix`** rewrites the safe ones and shows you the diff.
-- **`dejank measure`** runs your test, counts widget rebuilds and frame times, and compares them with the last run.
-- **No noise.** Only performance, only rules that matter. A wrong warning is treated as a bug.
-- **Safe fixes.** dejank reads your code the way the compiler does, so it only touches Flutter's real classes. Before writing a single file it re-checks the fixed code and skips any fix that would add an error.
+dejank is **two packages** that work together:
 
-## Two packages
-
-| Package | What it is | Install |
+| | [**dejank**](https://pub.dev/packages/dejank): the mechanic | [**dejank_meter**](https://pub.dev/packages/dejank_meter): the speed sensor |
 |---|---|---|
-| [**dejank**](https://pub.dev/packages/dejank) | The tool: `scan`, `fix` and `measure`. Runs on your computer. | `dart pub global activate dejank` |
-| [**dejank_meter**](https://pub.dev/packages/dejank_meter) | Counts widget rebuilds and frame times inside your app's tests, for `dejank measure`. A dev dependency: it never ships in your app. | `flutter pub add dev:dejank_meter` |
+| What it does | Finds slow code and fixes it | Measures how much faster the app got |
+| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, only in tests. It never ships to users |
+| Do you need it? | Yes | Only if you want before/after numbers |
+| Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
 
-`scan` and `fix` need only `dejank`. Add `dejank_meter` to an app when you want the before/after numbers.
+## How to use it
 
-## Quick start
-
-**1. Find slow code**
+### 1. Install the tool (once, on your computer)
 
 ```sh
 dart pub global activate dejank
+```
 
+### 2. Find slow code
+
+```sh
 cd my_app
 flutter pub get
 dejank scan
 ```
 
+Every problem, with its file and line, how much it hurts, and whether dejank can fix it:
+
 <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/scan.png" width="760" alt="dejank scan output: 7 numbered findings, each with its rule, impact and whether it is an auto-fix or a suggestion">
 
-**2. Fix it.** Commit first (git is your undo), then:
+### 3. Fix it
+
+Commit first (git is your undo), then:
 
 ```sh
 dejank fix --dry-run   # see the diff, change nothing
 dejank fix
 ```
 
+dejank rewrites the safe ones and shows the diff. **Most people stop here, and that's fine: the app is already faster.**
+
 <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/fix.png" width="760" alt="dejank fix output: the diff of the 4 fixes in 2 files">
 
-**3. Prove it.** Add the meter to your app and run your test before and after (see [Prove it](#prove-it-dejank-measure)):
+### 4. Optional: prove it with numbers
+
+This is where **dejank_meter** comes in.
+
+**a)** Add the meter to your app (test-only, it never ships):
 
 ```sh
 flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
-dejank measure integration_test/my_test.dart -d <device>
 ```
+
+**b)** In an integration test, wrap the steps you care about (open a screen, type, scroll) in `measure(...)`:
+
+```dart
+import 'package:dejank_meter/dejank_meter.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:my_app/main.dart';
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('search', (tester) async {
+    await measure('search', () async {
+      await tester.pumpWidget(const MyApp());
+      await tester.enterText(find.byType(TextField), 'shoes');
+      await tester.pumpAndSettle();
+    });
+  });
+}
+```
+
+**c)** Measure before the fix, fix, then measure again:
+
+```sh
+dejank measure integration_test/search_test.dart -d <phone>
+dejank fix
+dejank measure integration_test/search_test.dart -d <phone>
+```
+
+The second run prints the before/after table:
+
+<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
+
+**Behind the scenes:** `dejank measure` runs your test, `dejank_meter` counts rebuilds and frame times inside the app while it runs, and `dejank` reads those counts and shows the table.
+
+The numbers are saved in `.dejank/`, which dejank keeps out of git. Each run compares with the last one; run once with `--baseline` to keep comparing with that run instead. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
+
+## Why dejank
+
+- **It fixes, not just flags.** About half the rules rewrite the code for you; the rest show the exact fix.
+- **It proves it.** Real before/after numbers from a real phone, not a guess.
+- **No noise.** Only performance, only rules that matter. A wrong warning is treated as a bug.
+- **Safe fixes.** dejank reads your code the way the compiler does, so it only touches Flutter's real classes. Before writing a single file it re-checks the fixed code and skips any fix that would add an error.
 
 ## The rules
 
@@ -117,49 +168,6 @@ In CI or a pre-commit hook, `dejank scan` exits with code 1 when it finds a high
 
 Adding `const` isn't here on purpose: turn on the official `prefer_const_constructors` lint and run `dart fix --apply`.
 
-## Prove it: `dejank measure`
-
-Add [`dejank_meter`](https://pub.dev/packages/dejank_meter) to your app's dev dependencies:
-
-```sh
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
-```
-
-Wrap the steps of an integration test in `measure`:
-
-```dart
-import 'package:dejank_meter/dejank_meter.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import 'package:my_app/main.dart';
-
-void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('search', (tester) async {
-    await measure('search', () async {
-      await tester.pumpWidget(const MyApp());
-      await tester.enterText(find.byType(TextField), 'shoes');
-      await tester.pumpAndSettle();
-    });
-  });
-}
-```
-
-Run it, fix, run it again:
-
-```sh
-dejank measure integration_test/search_test.dart -d <device>
-dejank fix
-dejank measure integration_test/search_test.dart -d <device>
-```
-
-<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
-
-The numbers are saved in `.dejank/`, which dejank keeps out of git. Each run compares with the last one; run once with `--baseline` to keep comparing with that run instead. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
-
-`dejank_meter` is a dev dependency: it never ships inside your app.
-
 ## Example app
 
 [`example/slow_app`](example/slow_app) is a 200-product shop that triggers every rule. Its [search test](example/slow_app/integration_test/search_test.dart) opens the keyboard, types, closes it and scrolls. That is the run in the picture at the top.
@@ -188,13 +196,27 @@ Bump `version:` in `pubspec.yaml` (or `dejank_meter/pubspec.yaml`), add a line t
 
 **dejank** يجد الكود البطيء في تطبيق Flutter، ويصلحه لك، ويثبت التحسّن بالأرقام.
 
+هو حزمتان تعملان معًا:
+
+- **dejank** هو الميكانيكي: أداة على جهازك تجد الكود البطيء وتصلحه.
+- **dejank_meter** هو حسّاس السرعة: يُضاف داخل تطبيقك في الاختبارات فقط (لا يصل إلى المستخدمين)، ويقيس كم أصبح التطبيق أسرع. تحتاجه فقط إذا أردت أرقام قبل وبعد.
+
 ```sh
+# ١. ثبّت الأداة مرة واحدة على جهازك
 dart pub global activate dejank
+
+# ٢. ابحث عن الكود البطيء
 cd my_app && flutter pub get
-dejank scan   # يعرض المشاكل مع الملف والسطر
-dejank fix    # يصلح المشاكل الآمنة ويعرض الفرق
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'   # داخل تطبيقك، فقط لأجل measure
-dejank measure integration_test/search_test.dart -d <device>   # الأرقام قبل وبعد
+dejank scan
+
+# ٣. أصلحه (معظم الناس يكتفون بهذا)
+dejank fix
+
+# ٤. اختياري: أثبت التحسّن بالأرقام (هنا يأتي dejank_meter)
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
+dejank measure integration_test/search_test.dart -d <phone>   # قبل الإصلاح
+dejank fix
+dejank measure integration_test/search_test.dart -d <phone>   # بعد الإصلاح: جدول قبل وبعد
 ```
 
 في تطبيق المتجر التجريبي على هاتف Android: غيّر `dejank fix` أربعة أسطر فقط، فانخفض عدد مرات بناء الـ widgets بنسبة **٩٣٪** وانخفضت الإطارات البطيئة بنسبة **٨٤٪**.
