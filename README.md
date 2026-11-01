@@ -24,6 +24,18 @@
   <a href="https://github.com/Abojawdat"><img alt="by Abojawdat" src="https://img.shields.io/badge/by-Abojawdat-C8102E"></a>
 </p>
 
+## Two packages, one job
+
+dejank comes as **two packages**. Install **dejank** to find and fix slow code. Add **dejank_meter** to your app as well
+to get the full workflow: real before/after numbers that prove the fix worked.
+
+| | [**dejank**](https://pub.dev/packages/dejank): the mechanic | [**dejank_meter**](https://pub.dev/packages/dejank_meter): the speed sensor |
+|---|---|---|
+| What it does | **Finds** slow code and **fixes** it | **Measures** how much faster the app got |
+| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, only in tests. It never ships to users |
+| Do you need it? | Yes | Only for the before/after numbers |
+| Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/session.webp" width="760" alt="Terminal recording: dejank scan finds 7 problems, dejank fix fixes 4 of them, and dejank measure shows 93% fewer widget builds and 84% fewer slow frames">
 </p>
@@ -35,17 +47,6 @@
 </p>
 
 ---
-
-## How it works
-
-dejank is **two packages** that work together:
-
-| | [**dejank**](https://pub.dev/packages/dejank): the mechanic | [**dejank_meter**](https://pub.dev/packages/dejank_meter): the speed sensor |
-|---|---|---|
-| What it does | Finds slow code and fixes it | Measures how much faster the app got |
-| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, only in tests. It never ships to users |
-| Do you need it? | Yes | Only if you want before/after numbers |
-| Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
 
 ## How to use it
 

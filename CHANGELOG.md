@@ -1,3 +1,7 @@
+## 0.1.6
+
+- The top of the README says right away that dejank is two packages, and what each one is for.
+
 ## 0.1.5
 
 - The README and the Example tab start with how dejank works: two packages (dejank finds and fixes, dejank_meter measures) and the four steps from install to before/after numbers.
