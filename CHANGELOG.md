@@ -1,3 +1,7 @@
+## 0.1.7
+
+- The package description (shown on every pub.dev tab, including Installing) says to add dejank_meter for the full workflow.
+
 ## 0.1.6
 
 - The top of the README says right away that dejank is two packages, and what each one is for.
