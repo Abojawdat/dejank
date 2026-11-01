@@ -4,3 +4,5 @@ example/slow_app/
 CLAUDE.md
 tool/
 site/
+build/
+.dart_tool/

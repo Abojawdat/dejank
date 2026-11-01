@@ -150,4 +150,5 @@ Published: `dejank` 0.1.3 on pub.dev (2026-11-01, by the GitHub Actions release 
 - Run: `dart run bin/dejank.dart scan <path>` / `fix <path>`. The target project needs `flutter pub get` first.
 - Release: bump `version:` in `pubspec.yaml` or `dejank_meter/pubspec.yaml` + CHANGELOG, push to main. `release.yml`
   tags it (`v1.2.3` / `dejank_meter-v1.2.3`) and starts `publish.yml` (GitHub environment `pub.dev`). The root
-  `.pubignore` also applies to `dejank_meter/`, so never list `dejank_meter/` in it.
+  `.pubignore` also applies to `dejank_meter/`, so never list `dejank_meter/` in it. A folder with a `.pubignore`
+  ignores its `.gitignore` for publishing, so `build/` and `.dart_tool/` must be listed in `.pubignore` too.
