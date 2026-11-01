@@ -1,3 +1,7 @@
+## 0.1.8
+
+- Says at the top and in the description to install both packages: dejank with Dart, dejank_meter with Flutter.
+
 ## 0.1.7
 
 - The package description (shown on every pub.dev tab, including Installing) says to add dejank_meter for the full workflow.

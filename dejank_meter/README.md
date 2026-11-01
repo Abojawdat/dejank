@@ -22,8 +22,14 @@
 
 ## Two packages, one job
 
-This is the measuring half of **dejank**. Install [**dejank**](https://pub.dev/packages/dejank) to find and fix slow
-code, and add this package to your app to get the full workflow: real before/after numbers that prove the fix worked.
+This is the measuring half of **dejank**, so install both: [**dejank**](https://pub.dev/packages/dejank) with Dart
+(the tool, on your computer) and **dejank_meter** with Flutter (inside your app). Together you get the full workflow:
+find and fix slow code, then real before/after numbers that prove the fix worked.
+
+```sh
+dart pub global activate dejank      # 1. the tool: with Dart, on your computer
+flutter pub add dev:dejank_meter     # 2. the meter: with Flutter, inside your app (dev only)
+```
 `dejank scan` and `dejank fix` work without it; you need it for `dejank measure`.
 
 | | [**dejank**](https://pub.dev/packages/dejank): the mechanic | **dejank_meter** (this package): the speed sensor |

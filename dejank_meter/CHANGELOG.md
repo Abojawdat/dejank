@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Says at the top and in the description to install both packages: dejank with Dart, dejank_meter with Flutter.
+
 ## 0.1.2
 
 - The top of the README says right away that dejank is two packages, and what each one is for.
