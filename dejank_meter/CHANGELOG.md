@@ -1,3 +1,7 @@
+## 0.2.0
+
+- `live()`: counts rebuilds and frame times for as long as the app runs and reports running totals, so `dejank measure -d <phone>` works with no test to write.
+
 ## 0.1.4
 
 - Says at the top and in the description to install both packages: dejank with Dart, dejank_meter with Flutter.

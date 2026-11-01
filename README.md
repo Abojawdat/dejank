@@ -38,7 +38,7 @@ flutter pub add dev:dejank_meter     # 2. the meter: with Flutter, inside your a
 | | [**dejank**](https://pub.dev/packages/dejank): the mechanic | [**dejank_meter**](https://pub.dev/packages/dejank_meter): the speed sensor |
 |---|---|---|
 | What it does | **Finds** slow code and **fixes** it | **Measures** how much faster the app got |
-| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, only in tests. It never ships to users |
+| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, as a dev dependency. It never ships to users |
 | Do you need it? | Yes | Only for the before/after numbers |
 | Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
 
@@ -89,15 +89,41 @@ dejank rewrites the safe ones and shows the diff. **Most people stop here, and t
 
 ### 4. Optional: prove it with numbers
 
-This is where **dejank_meter** comes in.
-
-**a)** Add the meter to your app (test-only, it never ships):
+This is where **dejank_meter** comes in. There is no test to write:
 
 ```sh
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
+flutter pub add dev:dejank_meter     # once per app
+dejank measure -d <phone>            # the name from `flutter devices`
 ```
 
-**b)** In an integration test, wrap the steps you care about (open a screen, type, scroll) in `measure(...)`:
+Your app opens on the phone with the meter on, and dejank tells you what to do:
+
+```
+ ✅ Your app is open on the phone, with the meter on.
+    1. Go to the screen you want to check.
+    2. Do what feels slow: scroll the list, search, open the keyboard.
+    3. Come back here and press Enter.
+```
+
+When you press Enter, dejank shows how many times each widget rebuilt and how many frames were slow. Change your code
+(for example with `dejank fix`), run `dejank measure -d <phone>` again, do the same steps, and you get the
+before/after table:
+
+<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
+
+**Behind the scenes:** dejank starts your app through a tiny launcher it writes in `.dejank/` (never in your code),
+dejank_meter counts rebuilds and frame times inside the app while you use it, and dejank shows the table. The app runs
+exactly as it does with `flutter run`, so it talks to the same server and asks for the same login. Apps with flavors or
+another main file: add `--flavor <name>` or `--target lib/main_dev.dart`.
+
+The numbers are saved in `.dejank/`, which dejank keeps out of git. Each run compares with the last one; run once with
+`--baseline` to keep comparing with that run instead. Widget build counts are exact. Frame times need a real device,
+and since the build counter only works in debug mode, compare them with each other, not with release builds.
+
+#### Exact, repeatable numbers (for CI)
+
+Using the app by hand is never exactly the same twice. For numbers you can compare to the decimal, or check in CI,
+put the steps in an integration test and wrap them in `measure(...)`:
 
 ```dart
 import 'package:dejank_meter/dejank_meter.dart';
@@ -118,21 +144,10 @@ void main() {
 }
 ```
 
-**c)** Measure before the fix, fix, then measure again:
-
 ```sh
-dejank measure integration_test/search_test.dart -d <phone>
-dejank fix
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
 dejank measure integration_test/search_test.dart -d <phone>
 ```
-
-The second run prints the before/after table:
-
-<img src="https://raw.githubusercontent.com/Abojawdat/dejank/main/art/measure.png" width="760" alt="dejank measure output: widget builds 214,669 to 15,219 (-93%), slow frames 44 to 7 (-84%)">
-
-**Behind the scenes:** `dejank measure` runs your test, `dejank_meter` counts rebuilds and frame times inside the app while it runs, and `dejank` reads those counts and shows the table.
-
-The numbers are saved in `.dejank/`, which dejank keeps out of git. Each run compares with the last one; run once with `--baseline` to keep comparing with that run instead. Widget build counts are exact. Frame times need a real device, and since the build counter only works in debug mode, compare them with each other, not with release builds.
 
 ## Why dejank
 
@@ -219,11 +234,11 @@ dejank scan
 # ٣. أصلحه (معظم الناس يكتفون بهذا)
 dejank fix
 
-# ٤. اختياري: أثبت التحسّن بالأرقام (هنا يأتي dejank_meter)
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
-dejank measure integration_test/search_test.dart -d <phone>   # قبل الإصلاح
+# ٤. اختياري: أثبت التحسّن بالأرقام (هنا يأتي dejank_meter)، بدون كتابة أي اختبار
+flutter pub add dev:dejank_meter
+dejank measure -d <phone>   # يفتح تطبيقك على الهاتف: استخدمه ثم اضغط Enter
 dejank fix
-dejank measure integration_test/search_test.dart -d <phone>   # بعد الإصلاح: جدول قبل وبعد
+dejank measure -d <phone>   # نفس الخطوات مرة ثانية: جدول قبل وبعد
 ```
 
 في تطبيق المتجر التجريبي على هاتف Android: غيّر `dejank fix` أربعة أسطر فقط، فانخفض عدد مرات بناء الـ widgets بنسبة **٩٣٪** وانخفضت الإطارات البطيئة بنسبة **٨٤٪**.

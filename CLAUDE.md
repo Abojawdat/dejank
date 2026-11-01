@@ -107,7 +107,10 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
    avg build 22.9 → 7.7 ms (-66%), slow frames 43 → 6 of ~140 (-86%). Debug mode (the build hook needs it), so
    frame times are relative; build counts are exact. Second run with the pretty CLI (same day, the one in all
    images): 214,669 → 15,219 (-93%), slow frames 44 → 7 (-84%), avg build 27.1 → 8.9 ms (-67%).
-6. Live rebuild overlay.
+6. ✅ Live measure (2026-11-01): `dejank measure -d <phone>` with no test. It writes `.dejank/live_main.dart`
+   (calls `dejank_meter`'s `live()`, then the app's own `main`), runs `flutter run`, shows instructions, and on Enter
+   stops and reports. The meter sends one small line per changed widget total (Android log lines have a size limit).
+   Tested on the demo app on the phone. An on-screen rebuild overlay is still to do.
 7. 🚧 Deep engine (plan: `docs/deep-engine.md`). Done: heat map `lib/src/heat.dart` (how often code runs, with the
    call chain) and rules `hot-allocation`, `future-in-build`, `controller-in-build`; flow rules `missing-dispose`,
    `builder-child`, `eager-list`; read/write rules `bloc-select` and stored `MediaQuery`. Every rule was checked by

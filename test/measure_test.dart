@@ -14,6 +14,16 @@ void main() {
     expect(runs['search']!.frames, {'count': 120, 'buildMs': 9.8, 'rasterMs': 3.1, 'slow': 23});
   });
 
+  test('live mode lines carry running totals', () {
+    final runs = parseRuns([
+      'I/flutter (123): DEJANK_METER {"name":"live","ready":true}',
+      'I/flutter (123): DEJANK_METER {"name":"live","widget":"OrderCard","total":40}',
+      'I/flutter (123): DEJANK_METER {"name":"live","widget":"Text","total":7}',
+      'I/flutter (123): DEJANK_METER {"name":"live","widget":"OrderCard","total":95}',
+    ]);
+    expect(runs['live']!.builds, {'OrderCard': 95, 'Text': 7});
+  });
+
   test('compares with the last run', () {
     final before = Run({'ProductTile': 4000, 'Text': 214}, {'count': 120, 'buildMs': 9.8, 'rasterMs': 3.1, 'slow': 23});
     final now = Run({'ProductTile': 0, 'Text': 214}, {'count': 120, 'buildMs': 1.2, 'rasterMs': 3.1, 'slow': 0});

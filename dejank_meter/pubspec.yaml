@@ -1,6 +1,6 @@
 name: dejank_meter
 description: "The measuring half of dejank. Install both: flutter pub add dev:dejank_meter (in your app) and dart pub global activate dejank (the tool), for before/after numbers."
-version: 0.1.4
+version: 0.2.0
 homepage: https://abojawdat.github.io/dejank/
 repository: https://github.com/Abojawdat/dejank/tree/main/dejank_meter
 issue_tracker: https://github.com/Abojawdat/dejank/issues

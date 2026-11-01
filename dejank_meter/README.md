@@ -35,7 +35,7 @@ flutter pub add dev:dejank_meter     # 2. the meter: with Flutter, inside your a
 | | [**dejank**](https://pub.dev/packages/dejank): the mechanic | **dejank_meter** (this package): the speed sensor |
 |---|---|---|
 | What it does | **Finds** slow code and **fixes** it | **Measures** how much faster the app got |
-| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, only in tests. It never ships to users |
+| Where it lives | On your computer (a command-line tool, like `git`) | Inside your app, as a dev dependency. It never ships to users |
 | Do you need it? | Yes | Only for the before/after numbers |
 | Install | `dart pub global activate dejank` | `flutter pub add dev:dejank_meter` |
 
@@ -52,10 +52,28 @@ flutter pub add dev:dejank_meter     # 2. the meter: with Flutter, inside your a
 
 ```sh
 dart pub global activate dejank
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
+flutter pub add dev:dejank_meter
 ```
 
-**2.** In an integration test, wrap the steps you care about (open a screen, type, scroll) in `measure(...)`:
+**2.** Run your app with the meter on. There is no test to write:
+
+```sh
+dejank measure -d <phone>     # the name from `flutter devices`
+```
+
+Your app opens on the phone. Go to the screen you want to check, do what feels slow (scroll, search, open the
+keyboard), then press Enter on the computer. dejank shows how many times each widget rebuilt and how many frames were
+slow.
+
+**3.** Change your code (for example with `dejank fix`), run `dejank measure -d <phone>` again, do the same steps, and
+you get the before/after table.
+
+**Behind the scenes:** dejank starts your app through a tiny launcher it writes in `.dejank/` (never in your code),
+this package counts rebuilds and frame times inside the app while you use it, and dejank shows the table.
+
+### Exact, repeatable numbers (for CI)
+
+For numbers you can compare to the decimal, put the steps in an integration test and wrap them in `measure(...)`:
 
 ```dart
 import 'package:dejank_meter/dejank_meter.dart';
@@ -76,24 +94,17 @@ void main() {
 }
 ```
 
-**3.** Measure before the fix, fix, then measure again:
-
 ```sh
-dejank measure integration_test/search_test.dart -d <phone>
-dejank fix
+flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
 dejank measure integration_test/search_test.dart -d <phone>
 ```
 
-The second run prints the before/after table (the picture at the top).
-
-**Behind the scenes:** `dejank measure` runs your test, this package counts rebuilds and frame times inside the app while it runs, and `dejank` reads those counts and shows the table.
-
 ## What it counts
 
-- **Widget builds**, per widget type, through Flutter's `debugOnRebuildDirtyWidget` hook. Exact, but only in debug mode, which is how integration tests run.
+- **Widget builds**, per widget type, through Flutter's `debugOnRebuildDirtyWidget` hook. Exact, but only in debug mode (how `dejank measure` runs the app).
 - **Frames**: count, average build and raster time, and how many missed the 60 fps budget. Needs a real device. Because it runs in debug mode, compare runs with each other, not with release builds.
 
-It only runs inside `measure` and puts the hooks back when it is done. It is a dev dependency, so it never ships inside your app.
+It only runs while dejank measures (`live()` or `measure(...)`) and puts the hooks back when it is done. It is a dev dependency, so it never ships inside your app.
 
 ## Licence
 

@@ -1,3 +1,7 @@
+## 0.2.0
+
+- **`dejank measure` needs no test anymore.** Run `dejank measure -d <phone>`: your app opens with the meter on, you use it, press Enter, and dejank shows what rebuilt and how many frames were slow. Run it again after a change for the before/after table. `--flavor` and `--target` for apps that need them. The scripted test mode is still there for exact numbers in CI.
+
 ## 0.1.9
 
 - Says at the top and in the description to install both packages: dejank with Dart, dejank_meter with Flutter.

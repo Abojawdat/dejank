@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -210,14 +211,20 @@ class MeasureCommand extends Command<void> {
   final name = 'measure';
   @override
   final description =
-      'Run a test that uses dejank_meter, save its numbers, and compare them with the last run.\n'
-      'Add the meter to your app first: flutter pub add dev:dejank_meter \'dev:integration_test:{"sdk":"flutter"}\'';
+      'Measure widget rebuilds and frame times while you use your app, and compare them with the last run.\n'
+      'Add the meter to your app first: flutter pub add dev:dejank_meter';
   @override
-  String get invocation => 'dejank measure <test file> [-d device]';
+  String get invocation => 'dejank measure -d <device>   (or: dejank measure <test file> -d <device>)';
 
   MeasureCommand() {
     argParser
-      ..addOption('device', abbr: 'd', help: 'Run on this device. Frame times need a real device.')
+      ..addOption(
+        'device',
+        abbr: 'd',
+        help: 'Run on this device (see flutter devices). Frame times need a real device.',
+      )
+      ..addOption('target', abbr: 't', defaultsTo: 'lib/main.dart', help: "Your app's main file, for live mode.")
+      ..addOption('flavor', help: 'Build flavor, for live mode.')
       ..addFlag(
         'baseline',
         negatable: false,
@@ -225,15 +232,14 @@ class MeasureCommand extends Command<void> {
       );
   }
 
+  static const _addMeter = "flutter pub add dev:dejank_meter 'dev:integration_test:{\"sdk\":\"flutter\"}'";
+
   @override
   Future<void> run() async {
-    final test = argResults!.rest.firstOrNull ?? usageException('Which test file should run?');
+    final test = argResults!.rest.firstOrNull;
+    if (test == null) return _live();
     if (!File(test).existsSync()) usageException('Not found: $test');
-    var root = File(test).absolute.parent;
-    while (!File(p.join(root.path, 'pubspec.yaml')).existsSync()) {
-      if (root.parent.path == root.path) usageException('No pubspec.yaml above $test');
-      root = root.parent;
-    }
+    final root = _root(File(test).absolute.parent) ?? usageException('No pubspec.yaml above $test');
     final device = argResults!.option('device');
     if (_fancy) {
       _header(name, p.relative(test));
@@ -263,12 +269,149 @@ class MeasureCommand extends Command<void> {
     if (runs.isEmpty) {
       stderr
         ..writeln("No numbers found. Wrap the steps in measure('name', () async { ... }) from dejank_meter.")
-        ..writeln(
-          'Add it to your app with: flutter pub add dev:dejank_meter \'dev:integration_test:{"sdk":"flutter"}\'',
-        );
+        ..writeln('Add it to your app with: $_addMeter');
       exitCode = 1;
       return;
     }
+    _report(root, runs);
+  }
+
+  static Directory? _root(Directory from) {
+    for (var dir = from; ; dir = dir.parent) {
+      if (File(p.join(dir.path, 'pubspec.yaml')).existsSync()) return dir;
+      if (dir.parent.path == dir.path) return null;
+    }
+  }
+
+  Future<void> _live() async {
+    final root = _root(Directory.current) ?? usageException('Run this inside your Flutter app (no pubspec.yaml here).');
+    final device =
+        argResults!.option('device') ?? usageException('Which device? Run `flutter devices` and add -d <device>.');
+    final pubspec = File(p.join(root.path, 'pubspec.yaml')).readAsStringSync();
+    if (!RegExp(r'^\s+dejank_meter\s*:', multiLine: true).hasMatch(pubspec)) {
+      stderr
+        ..writeln('This app needs the meter first. Add it once with:')
+        ..writeln('  flutter pub add dev:dejank_meter');
+      exitCode = 1;
+      return;
+    }
+    final target = argResults!.option('target')!;
+    final entry = File(p.join(root.path, target));
+    if (!entry.existsSync()) usageException('Not found: $target (use --target for another main file)');
+    final package = RegExp(r'^name:\s*(\S+)', multiLine: true).firstMatch(pubspec)?[1];
+    final inLib = p.relative(entry.absolute.path, from: p.join(root.path, 'lib'));
+    final import = inLib.startsWith('..') || package == null
+        ? '../${p.posix.joinAll(p.split(p.relative(entry.absolute.path, from: root.path)))}'
+        : 'package:$package/${p.posix.joinAll(p.split(inLib))}';
+    final takesArgs = RegExp(r'\bmain\s*\(\s*[^)\s]').hasMatch(entry.readAsStringSync());
+    final launcher = File(p.join(root.path, '.dejank', 'live_main.dart'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync(
+        "import 'package:dejank_meter/dejank_meter.dart' as dejank;\n"
+        "import '$import' as app;\n\n"
+        'void main() {\n'
+        '  dejank.live();\n'
+        '  app.main(${takesArgs ? 'const []' : ''});\n'
+        '}\n',
+      );
+    File(p.join(launcher.parent.path, '.gitignore')).writeAsStringSync('*\n');
+
+    if (_fancy) {
+      _header(name, 'live on $device');
+      print(' ⏱  Building and starting your app... (the first build can take a few minutes)');
+    } else {
+      print('Building and starting your app on $device...');
+    }
+    final flavor = argResults!.option('flavor');
+    final process = await Process.start(
+      'flutter',
+      [
+        'run',
+        '-t',
+        p.relative(launcher.path, from: root.path),
+        '-d',
+        device,
+        if (flavor != null) ...['--flavor', flavor],
+      ],
+      workingDirectory: root.path,
+      runInShell: Platform.isWindows,
+    );
+    final meter = <String>[];
+    final other = <String>[];
+    final ready = Completer<void>();
+    void onLine(String line) {
+      if (line.contains(marker)) {
+        meter.add(line);
+        if (!ready.isCompleted && line.contains('"ready":true')) ready.complete();
+      } else {
+        other.add(line);
+        if (other.length > 60) other.removeAt(0);
+      }
+    }
+
+    for (final stream in [process.stdout, process.stderr]) {
+      stream.transform(utf8.decoder).transform(const LineSplitter()).listen(onLine);
+    }
+    final exited = process.exitCode;
+    await Future.any([ready.future, exited]);
+    if (!ready.isCompleted) {
+      stderr
+        ..writeln(other.join('\n'))
+        ..writeln('The app did not start, nothing was measured.')
+        ..writeln(
+          other.any((l) => l.contains("'live'"))
+              ? 'Your dejank_meter is too old for live mode: flutter pub upgrade dejank_meter'
+              : 'Check that the app builds and runs with: flutter run -d $device',
+        );
+      launcher.deleteSync();
+      exitCode = 1;
+      return;
+    }
+
+    final steps = [
+      'Go to the screen you want to check.',
+      'Do what feels slow: scroll the list, search, open the keyboard.',
+      'Come back here and press Enter.',
+    ];
+    if (_fancy) {
+      print(' ✅ ${_bold('Your app is open on the phone, with the meter on.')}');
+      for (final (i, step) in steps.indexed) {
+        print('    ${i + 1}. $step');
+      }
+      print(_dim('    To compare later runs fairly, do the same steps each time.'));
+    } else {
+      print('Your app is open with the meter on.');
+      for (final (i, step) in steps.indexed) {
+        print('${i + 1}. $step');
+      }
+    }
+    final started = DateTime.now();
+    final enter = stdin.transform(utf8.decoder).transform(const LineSplitter()).first.catchError((Object _) => '');
+    await Future.any([enter, exited]);
+    final seconds = DateTime.now().difference(started).inSeconds;
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    process.stdin.write('q');
+    await Future.any([exited, Future<void>.delayed(const Duration(seconds: 5))]);
+    process.kill();
+    launcher.deleteSync();
+
+    final runs = parseRuns(meter);
+    if (runs.isEmpty || runs.values.first.total == 0) {
+      stderr.writeln('No rebuilds were counted. Use the app for a moment before pressing Enter.');
+      exitCode = 1;
+      return;
+    }
+    final total = runs.values.first.total;
+    print(
+      _fancy
+          ? '\n ⏱  ${_bold(_count(seconds, 'second'))} of use: ${thousands(total)} widget builds '
+                '(${thousands(seconds == 0 ? total : total / seconds)} per second)'
+          : '$seconds seconds of use: $total widget builds',
+    );
+    _report(root, runs);
+  }
+
+  void _report(Directory root, Map<String, Run> runs) {
     final lib = Directory(p.join(root.path, 'lib'));
     final own = {
       if (lib.existsSync())
@@ -305,7 +448,7 @@ class MeasureCommand extends Command<void> {
         : null;
     if (!_fancy) {
       if (note != null) print(note);
-      if (first) print('Saved in .dejank/. Change something (like `dejank fix`) and run again to compare.');
+      if (first) print('Saved in .dejank/. Change your code and run again to compare.');
       return;
     }
     print(_bar());
@@ -313,9 +456,7 @@ class MeasureCommand extends Command<void> {
       print(' $w');
     }
     if (note != null) print(' 📌 $note');
-    if (first) {
-      print(' 📁 Saved in .dejank/. Change something (like ${_cyan('dejank fix')}) and run again to compare.');
-    }
+    if (first) print(' 📁 Saved. Change your code and run ${_cyan('dejank measure')} again to compare.');
     _credit();
   }
 

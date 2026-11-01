@@ -37,42 +37,16 @@ Most people stop here: the app is already faster.
 
 ## 4. Optional: prove it with numbers
 
-**a)** Add the meter to your app as a **dev** dependency:
+No test to write. Add the meter to your app once, then run your app with it:
 
 ```sh
-flutter pub add dev:dejank_meter 'dev:integration_test:{"sdk":"flutter"}'
+flutter pub add dev:dejank_meter
+dejank measure -d <phone>
 ```
 
-**b)** In `integration_test/search_test.dart`, wrap the steps you care about in `measure(...)`:
-
-```dart
-import 'package:dejank_meter/dejank_meter.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import 'package:my_app/main.dart';
-
-void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('search', (tester) async {
-    await measure('search', () async {
-      await tester.pumpWidget(const MyApp());
-      await tester.enterText(find.byType(TextField), 'shoes');
-      await tester.pumpAndSettle();
-    });
-  });
-}
-```
-
-**c)** Measure before the fix, fix, then measure again:
-
-```sh
-dejank measure integration_test/search_test.dart -d <phone>
-dejank fix
-dejank measure integration_test/search_test.dart -d <phone>
-```
-
-The second run prints a before/after table, like this one from the demo app on an Android phone:
+Your app opens on the phone. Go to the screen you want to check, do what feels slow, then press Enter. Change your
+code, run `dejank measure -d <phone>` again with the same steps, and you get a before/after table, like this one from
+the demo app on an Android phone:
 
 ```
 search                          before       now
@@ -83,8 +57,8 @@ frames                             140       142  +1%
   slow frames                       44         7  -84%
 ```
 
-`dejank measure` runs your test, `dejank_meter` counts rebuilds and frame times inside the app while it runs, and
-`dejank` reads those counts and shows the table.
+For exact, repeatable numbers (CI), see "Exact, repeatable numbers" in the README: the same steps in an integration
+test wrapped in `measure(...)`.
 
 ## Try it on the demo app
 

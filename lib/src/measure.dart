@@ -24,7 +24,7 @@ Map<String, Run> parseRuns(Iterable<String> lines) {
     final record = jsonDecode(line.substring(i + marker.length)) as Map<String, dynamic>;
     final run = runs.putIfAbsent(record['name'] as String, () => Run({}));
     if (record['widget'] case final String widget) {
-      run.builds[widget] = (run.builds[widget] ?? 0) + (record['builds'] as int);
+      run.builds[widget] = record['total'] as int? ?? (run.builds[widget] ?? 0) + (record['builds'] as int);
     }
     if (record['frames'] case final Map frames) run.frames = frames.cast();
   }

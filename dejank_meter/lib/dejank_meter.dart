@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/scheduler.dart';
@@ -28,6 +29,40 @@ Future<void> measure(String name, Future<void> Function() body) async {
     report({'widget': widget, 'builds': count});
   }
   if (frames.isNotEmpty) report({'frames': summarize(frames)});
+}
+
+void Function() live({String name = 'live', Duration every = const Duration(seconds: 1)}) {
+  WidgetsFlutterBinding.ensureInitialized();
+  final builds = <String, int>{};
+  final sent = <String, int>{};
+  final frames = <FrameTiming>[];
+  var reported = 0;
+  final previous = debugOnRebuildDirtyWidget;
+  debugOnRebuildDirtyWidget = (element, builtOnce) {
+    final type = element.widget.runtimeType.toString();
+    builds[type] = (builds[type] ?? 0) + 1;
+    previous?.call(element, builtOnce);
+  };
+  void onTimings(List<FrameTiming> timings) => frames.addAll(timings);
+  SchedulerBinding.instance.addTimingsCallback(onTimings);
+  void report(Map<String, Object> line) => print('$marker${jsonEncode({'name': name, ...line})}');
+  report({'ready': true});
+  final timer = Timer.periodic(every, (_) {
+    for (final MapEntry(key: widget, value: count) in builds.entries) {
+      if (sent[widget] == count) continue;
+      sent[widget] = count;
+      report({'widget': widget, 'total': count});
+    }
+    if (frames.length != reported && frames.isNotEmpty) {
+      reported = frames.length;
+      report({'frames': summarize(frames)});
+    }
+  });
+  return () {
+    timer.cancel();
+    debugOnRebuildDirtyWidget = previous;
+    SchedulerBinding.instance.removeTimingsCallback(onTimings);
+  };
 }
 
 Map<String, Object> summarize(List<FrameTiming> frames) {
