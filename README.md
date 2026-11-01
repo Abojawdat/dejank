@@ -69,7 +69,7 @@ dejank fix
 
 | Rule | What it finds | Fix |
 |---|---|---|
-| `mediaquery-of` | `MediaQuery.of(context).size` rebuilds on **every** MediaQuery change, like each frame of the keyboard animation | **auto** → `MediaQuery.sizeOf(context)` (and `paddingOf`, `widthOf`, …) |
+| `mediaquery-of` | `MediaQuery.of(context).size` rebuilds on **every** MediaQuery change, like each frame of the keyboard animation | **auto** → `MediaQuery.sizeOf(context)` (and `paddingOf`, `widthOf`, …), also when it was saved in a variable first |
 | `opacity-animation` | `AnimatedBuilder` + `Opacity(opacity: c.value)` rebuilds on every animation frame | **auto** → `FadeTransition(opacity: c)` |
 | `image-cache-size` | `Image.network` in a list decodes every image at full size | **auto** → `cacheWidth` from the width × device pixel ratio |
 | `shrinkwrap-in-column` | `ListView.builder(shrinkWrap: true)` in a `Column` builds every item at once | suggest → `Expanded` or slivers |
@@ -80,6 +80,7 @@ dejank fix
 | `controller-in-build` | `TextEditingController()`, `ScrollController()`, `FocusNode()`, `GlobalKey()`… created in `build`: state lost on every rebuild, never disposed | suggest → create once, dispose |
 | `missing-dispose` | a `State` creates an `AnimationController`, `TextEditingController`, `ScrollController`, `FocusNode`, `ValueNotifier`, `StreamSubscription` or `Timer` and never disposes or cancels it | **auto** → adds the line (and `dispose()` if missing) |
 | `builder-child` | `AnimatedBuilder` / `TweenAnimationBuilder` / `ValueListenableBuilder` rebuilds a subtree that never reads the animation | **auto** → moves it into `child:` |
+| `bloc-select` | a `BlocBuilder` that reads one or a few fields of `state`, or `context.watch<X>().field`: rebuilds on every state change | **auto** → `BlocSelector`, `buildWhen` or `context.select` (simple values only); suggest otherwise |
 | `eager-list` | `ListView(children: items.map(...))`, or a `Column` in a scroll view built from data: every item built up front | **auto** for `ListView` → `ListView.builder`; suggest otherwise |
 
 ### How often code runs

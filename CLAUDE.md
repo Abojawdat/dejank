@@ -110,8 +110,8 @@ Also later: the auto "select" fixer (`context.watch<X>()` → `context.select(..
 6. Live rebuild overlay.
 7. 🚧 Deep engine (plan: `docs/deep-engine.md`). Done: heat map `lib/src/heat.dart` (how often code runs, with the
    call chain) and rules `hot-allocation`, `future-in-build`, `controller-in-build`; flow rules `missing-dispose`,
-   `builder-child`, `eager-list`. Every rule was checked by hand on 5 real apps. Next: read/write map
-   (`BlocSelector` / `context.select`), deep measure.
+   `builder-child`, `eager-list`; read/write rules `bloc-select` and stored `MediaQuery`. Every rule was checked by
+   hand on 5 real apps, and `fix` was run on copies of them (0 new analyzer issues). Next: deep measure.
 
 Published: `dejank` 0.1.0 on pub.dev (2026-10-31). `dejank_meter` not yet. 0.1.1 is ready in CHANGELOG.
 

@@ -7,6 +7,7 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:path/path.dart' as p;
 
 import 'project.dart';
+import 'rules/bloc_select.dart';
 import 'rules/builder_child.dart';
 import 'rules/controller_in_build.dart';
 import 'rules/eager_list.dart';
@@ -33,6 +34,7 @@ final allRules = <Rule>[
   MissingDispose(),
   BuilderChild(),
   EagerList(),
+  BlocSelect(),
 ];
 
 abstract class Rule {

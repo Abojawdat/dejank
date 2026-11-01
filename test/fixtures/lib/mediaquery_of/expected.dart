@@ -22,6 +22,12 @@ class Sample extends StatelessWidget {
       context,
     );
 
+    // Saved in a variable, and only its fields are read.
+    final fromVariable = MediaQuery.widthOf(context) + MediaQuery.paddingOf(context).top;
+    // Read later in a callback: suggest only.
+    final later = MediaQuery.of(context); // LINT
+    void onTap() => debugPrint('${later.size}');
+
     // Must not change: whole MediaQueryData is used, or it's not Flutter's MediaQuery.
     final data = MediaQuery.of(context);
     final copy = MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling);
@@ -36,7 +42,7 @@ class Sample extends StatelessWidget {
 
     return Text(
       '$size $width $height $ratio $top $keyboard $scaler $dark $prefixed $both $multiline '
-      '$data $copy $maybe $notFlutter $theme',
+      '$data $copy $maybe $notFlutter $theme $fromVariable ${onTap.hashCode}',
     );
   }
 }

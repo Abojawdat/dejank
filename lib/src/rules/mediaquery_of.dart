@@ -61,7 +61,8 @@ class _Visitor extends RecursiveAstVisitor<void> {
 
     Expression read = node;
     var method = _readOf(read);
-    if (method == null || !MediaQueryOf._props.contains(method)) return;
+    if (method == null) return _stored(node, mediaQuery);
+    if (!MediaQueryOf._props.contains(method)) return;
     read = read.parent as Expression;
 
     final sub = method == 'size' ? _readOf(read) : null;
@@ -89,6 +90,77 @@ class _Visitor extends RecursiveAstVisitor<void> {
     );
   }
 
+  void _stored(MethodInvocation node, InterfaceElement mediaQuery) {
+    final declaration = node.parent;
+    final list = declaration?.parent;
+    final statement = list?.parent;
+    if (declaration is! VariableDeclaration ||
+        declaration.initializer != node ||
+        list is! VariableDeclarationList ||
+        list.variables.length != 1 ||
+        statement is! VariableDeclarationStatement) {
+      return;
+    }
+    final variable = declaration.declaredFragment?.element;
+    final scope = statement.parent;
+    if (variable == null || scope == null) return;
+    final uses = <SimpleIdentifier>[];
+    scope.accept(_References(variable, uses));
+    if (uses.isEmpty) return;
+    final target = unit.content.substring(node.target!.offset, node.target!.end);
+    final args = unit.content.substring(node.argumentList.offset, node.argumentList.end);
+    final edits = <Edit>[];
+    final read = <String>{};
+    var later = false;
+    for (final use in uses) {
+      final property = switch (use.parent) {
+        PrefixedIdentifier(:final prefix, :final identifier) when prefix == use => identifier,
+        PropertyAccess(:final target, :final propertyName) when target == use => propertyName,
+        _ => null,
+      };
+      if (property == null || !MediaQueryOf._props.contains(property.name)) return;
+      var method = property.name;
+      var end = property.end;
+      final outer = use.parent!.parent;
+      if (method == 'size' && outer is PropertyAccess && outer.target == use.parent) {
+        final sub = outer.propertyName.name;
+        if ((sub == 'width' || sub == 'height') && _hasStatic(mediaQuery, '${sub}Of')) {
+          method = sub;
+          end = outer.end;
+        }
+      }
+      if (!_hasStatic(mediaQuery, '${method}Of')) return;
+      later |= use.thisOrAncestorOfType<FunctionBody>() != statement.thisOrAncestorOfType<FunctionBody>();
+      read.add(method);
+      edits.add(Edit(use.offset, end - use.offset, '$target.${method}Of$args'));
+    }
+    final lineStart = unit.content.lastIndexOf('\n', statement.offset) + 1;
+    final lineEnd = unit.content.indexOf('\n', statement.end);
+    final ownLine = unit.content.substring(lineStart, statement.offset).trim().isEmpty;
+    final names = [for (final m in read) '$target.${m}Of$args'];
+    findings.add(
+      Finding(
+        rule,
+        unit,
+        node.offset,
+        [
+          'Saving MediaQuery.of(context) in `${declaration.name.lexeme}` still rebuilds on every MediaQuery change, '
+              'but only ${read.join(', ')} ${read.length == 1 ? 'is' : 'are'} read.',
+          'Use ${names.join(', ')} instead${later ? ' (some reads are in a callback: read the value in build and '
+                    'keep it in a variable there)' : ''}.',
+        ].join('\n'),
+        edits: later
+            ? const []
+            : [
+                ...edits,
+                ownLine && lineEnd != -1
+                    ? Edit(lineStart, lineEnd + 1 - lineStart, '')
+                    : Edit(statement.offset, statement.length, ''),
+              ],
+      ),
+    );
+  }
+
   static String? _readOf(Expression e) {
     final parent = e.parent;
     if (parent is PropertyAccess && parent.target == e && !parent.isNullAware) {
@@ -98,4 +170,15 @@ class _Visitor extends RecursiveAstVisitor<void> {
   }
 
   static bool _hasStatic(InterfaceElement c, String name) => c.getMethod(name)?.isStatic ?? false;
+}
+
+class _References extends RecursiveAstVisitor<void> {
+  final Element variable;
+  final List<SimpleIdentifier> into;
+  _References(this.variable, this.into);
+
+  @override
+  void visitSimpleIdentifier(SimpleIdentifier node) {
+    if (node.element == variable && !node.inDeclarationContext()) into.add(node);
+  }
 }
